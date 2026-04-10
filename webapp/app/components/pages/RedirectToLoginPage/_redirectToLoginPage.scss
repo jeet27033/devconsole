@@ -1,0 +1,27 @@
+@import '~@capillarytech/cap-ui-library/styles/_variables';
+
+.redirect-login-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; 
+    color: $CAP_G03;
+
+    .header {
+      font-size: $CAP_SPACE_42; 
+      margin-bottom: $CAP_SPACE_28; 
+    }
+  
+    .message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: $FONT_SIZE_M;    
+    
+      > div {
+        margin-bottom: $CAP_SPACE_04; 
+
+      }
+    }
+  }

@@ -1,0 +1,12 @@
+.DS_STORE
+*.log
+node_modules
+.git
+.env
+.scannerwork
+reports
+dist
+build.zip
+analysis
+esdocs
+.idea/

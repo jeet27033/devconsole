@@ -1,0 +1,114 @@
+/**
+ *
+ * {{properCase name }}
+ *
+ */
+
+import React from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+{{#if wantHeaders}}
+// import for headers
+import { Helmet } from 'react-helmet';
+{{/if}}
+
+{{#if wantMessages}}
+// import for i18n messages
+import { FormattedMessage, injectIntl, intlShape } from 'react-intl';
+import messages from './messages';
+{{/if}}
+
+{{#if wantActionsAndReducer}}
+// import for actions and reducer
+import { createStructuredSelector } from 'reselect';
+import { compose, bindActionCreators } from 'redux';
+import { injectReducer, clearDataOnUnmount } from '@capillarytech/vulcan-react-sdk/utils';
+import makeSelect{{properCase name}} from './selectors';
+import * as actions from './actions';
+import reducer from './reducer';
+{{else}}
+import { compose } from 'redux';
+import { clearDataOnUnmount } from '@capillarytech/vulcan-react-sdk/utils';
+{{/if}}
+
+{{#if wantSaga}}
+// import for saga
+import { injectSaga } from '@capillarytech/vulcan-react-sdk/utils';
+import saga from './saga';
+{{/if}}
+
+import { withStyles, getHostApplicationContext } from '@capillarytech/vulcan-react-sdk/utils';
+import styles from './styles';
+
+function {{ properCase name }}(props = {}) {
+  const { className, history, appContext } = props;
+  // appContext is the prop that needs to be passed from the host application where this component is embedded
+  // prepare the final context using SDK and use it in your app
+  const finalContext = getHostApplicationContext(appContext);
+  {{#if wantMessages}}
+  const { intl: { formatMessage } } = props;
+  {{/if}}
+  {{#if wantActionsAndReducer}}
+  const { actions } = props;
+  {{/if}}
+  return (
+    <div className={className}>
+    {{#if wantHeaders}}
+      <Helmet>
+        <title>{{properCase name}}</title>
+        <meta name="description" content="Description of {{properCase name}}" />
+      </Helmet>
+    {{/if}}
+    {{#if wantMessages}}
+      <FormattedMessage {...messages.header} />
+      <h3>{formatMessage(messages.header)}</h3>
+    {{else}}
+      <h1>This is a {{ properCase name }} container</h1>
+    {{/if}}
+    </div>
+  );
+}
+
+{{ properCase name }}.propTypes = {
+  history: PropTypes.object,
+  appContext: PropTypes.object,
+  className: PropTypes.string,
+  {{#if wantActionsAndReducer}}
+  actions: PropTypes.object,
+  {{/if}}
+  {{#if wantMessages}}
+  intl: intlShape.isRequired,
+  {{/if}}
+};
+
+{{#if wantActionsAndReducer}}
+const mapStateToProps = createStructuredSelector({
+  {{ camelCase name }}: makeSelect{{properCase name}}(),
+});
+
+function mapDispatchToProps(dispatch) {
+  return {
+    actions: bindActionCreators(actions, dispatch),
+  };
+};
+const withConnect = connect(mapStateToProps, mapDispatchToProps);
+
+//Do not remove your appName hash from here.
+const withReducer = injectReducer({ key: `${CURRENT_APP_NAME}-{{ camelCase name }}`, reducer });
+{{/if}}
+{{#if wantSaga}}
+//Do not remove your appName hash from here.
+const withSaga = injectSaga({ key: `${CURRENT_APP_NAME}-{{ camelCase name }}`, saga });
+{{/if}}
+
+export default compose(
+  withRouter,
+{{#if wantActionsAndReducer}}
+  withConnect,
+  withReducer,
+{{/if}}
+{{#if wantSaga}}
+  withSaga,
+{{/if}}
+){{#if wantMessages}}(injectIntl{{/if}}(clearDataOnUnmount(withStyles({{ properCase name }}, styles), "clearData")){{#if wantMessages}}){{/if}};

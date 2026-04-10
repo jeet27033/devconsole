@@ -1,0 +1,27 @@
+/*
+ *
+ * {{ properCase name }} reducer
+ *
+ */
+
+import { fromJS } from 'immutable';
+import { actionTypes } from './constants';
+
+// define your container's redux state here
+export const initialState = fromJS({
+
+});
+
+const {{ camelCase name }}Reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case actionTypes.DEFAULT_ACTION:
+      return state;
+    case actionTypes.CLEAR_DATA:
+      return initialState;
+    default:
+      return state;
+  }
+};
+
+export default {{ camelCase name }}Reducer;
+

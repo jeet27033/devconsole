@@ -1,0 +1,111 @@
+env:
+  browser: true
+  es6: true
+  node: true
+  jest: true
+
+globals:
+  CURRENT_APP_NAME: readonly
+
+parser: '@babel/eslint-parser'
+
+parserOptions:
+  requireConfigFile: false
+  ecmaVersion: 2020
+  sourceType: module
+  babelOptions:
+    presets:
+      - '@babel/preset-env'
+      - '@babel/preset-react'
+  moduleResolution: node
+
+extends:
+  - eslint:recommended
+  - plugin:react/recommended
+  - plugin:jsx-a11y/recommended
+  - plugin:prettier/recommended
+  - plugin:styled-components-a11y/recommended
+
+plugins:
+  - import
+  - react
+  - jsx-a11y
+  - styled-components-a11y
+
+rules:
+  import/order:
+    - error
+    - groups:
+        - builtin
+        - external
+        - internal
+        - parent
+        - sibling
+        - index
+      alphabetize:
+        order: asc
+        caseInsensitive: true
+      newlines-between: always
+      warnOnUnassignedImports: true
+
+  # Ensure All Components Have PropTypes
+  react/prop-types: error
+  react/require-default-props: error
+
+  # Restrict Component Size (Max 500 Lines)
+  max-lines:
+    - error
+    - max: 500
+
+  # Enforce Unique Keys in Lists
+  react/jsx-key: error
+
+  # Prevent Unused Variables
+  no-unused-vars:
+    - warn
+    - vars: all
+      args: after-used
+      ignoreRestSiblings: false
+
+  # Prevent Use of Console Logs in Production
+  no-console:
+    - warn
+    - allow: ['warn', 'error']
+
+  # Enforce Naming Conventions
+  camelcase:
+    - error
+    - properties: always
+
+  # Restrict Max Function Complexity (Avoid Unreadable Code)
+  complexity:
+    - error
+    - max: 10
+
+  # Enforce Prettier Formatting
+  prettier/prettier:
+    - error
+    - { singleQuote: true, printWidth: 100, endOfLine: 'lf' }
+
+  # No Trailing Spaces
+  no-trailing-spaces: error
+
+  # Ensure Newline at End of File
+  eol-last: error
+
+  # Prevent Unreachable Code
+  no-unreachable: error
+
+  # Disallow Use of `var`
+  no-var: error
+
+settings:
+  react:
+    version: 'detect'
+
+# Ignore Complexity Rule for Reducers because of Switch Statements
+overrides:
+  - files:
+      - '**/reducer.js'
+    rules:
+      complexity: off

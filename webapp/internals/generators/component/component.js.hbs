@@ -1,0 +1,43 @@
+/**
+ *
+ * {{ properCase name }}
+ *
+ */
+
+import React from 'react';
+// import PropTypes from 'prop-types';
+// import styled from 'styled-components';
+import { withStyles } from '@capillarytech/vulcan-react-sdk/utils';
+{{#if wantMessages}}
+import { injectIntl, intlShape } from 'react-intl';
+
+import messages from './messages';
+{{/if}}
+import styles from './styles';
+
+function {{ properCase name }}(props) {
+  {{#if wantMessages}}
+  const { formatMessage } = props.intl;
+  {{/if}}
+  return (
+    <div>
+    {{#if wantMessages}}
+      {formatMessage(messages.header)}
+    {{else}}
+      <h1>This is a {{ properCase name }} component</h1>
+    {{/if}}
+    </div>
+  );
+}
+
+{{ properCase name }}.propTypes = {
+  {{#if wantMessages}}
+    intl: intlShape.isRequired,
+  {{/if}}
+};
+
+{{#if wantMessages}}
+export default injectIntl(withStyles({{ properCase name }}, styles));
+{{else}}
+export default withStyles({{ properCase name }}, styles);
+{{/if}}
