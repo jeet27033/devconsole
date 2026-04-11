@@ -1,5 +1,5 @@
 {
-  "name": "devconsole-ui",
+  "name": "devconsole",
   "version": "0.0.1",
   "description": "",
   "repository": {
@@ -62,8 +62,7 @@
   },
   "dependencies": {
     "@babel/polyfill": "7.0.0",
-    "@capillarytech/cap-ui-library": "^8.14.3",
-    "@capillarytech/vulcan-react-sdk": "^2.4.9",
+    "@capillarytech/vulcan-react-sdk": "latest",
     "@melloware/react-logviewer": "^6.5.2",
     "connected-react-router": "4.5.0",
     "ml-matrix": "6.5.0",

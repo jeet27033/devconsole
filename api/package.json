@@ -15,7 +15,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@capillarytech/arya": "38.4.4",
+    "@capillarytech/arya": "latest",
     "body-parser": "^2.2.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
