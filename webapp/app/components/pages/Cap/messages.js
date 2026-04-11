@@ -77,4 +77,16 @@ export default defineMessages({
     id: `${scope}.confirm`,
     defaultMessage: 'Confirm',
   },
+  somethingWentWrongTitle: {
+    id: `${scope}.somethingWentWrongTitle`,
+    defaultMessage: 'Something went wrong',
+  },
+  somethingWentWrongDesc: {
+    id: `${scope}.somethingWentWrongDesc`,
+    defaultMessage: 'An unexpected error occurred. Please try again.',
+  },
+  tryRefreshing: {
+    id: `${scope}.tryRefreshing`,
+    defaultMessage: 'Try refreshing',
+  },
 });

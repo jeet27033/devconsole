@@ -1,16 +1,29 @@
 import { lazy } from 'react';
-const Home = lazy(() => import('../Home/Loadable'));
+import DashboardLayout from '../../templates/DashboardLayout';
+
 const routes = [
   {
     exact: true,
     path: `/accessForbidden`,
     component: lazy(() => import('@capillarytech/vulcan-react-sdk/components/AccessForbidden')),
   },
-  // default route
   {
-    exact: true,
-    path: `/*`,
-    component: Home,
+    path: `/`,
+    component: DashboardLayout,
+    routes: [
+      {
+        exact: true,
+        path: `/extensions-deployment`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/ExtensionsDeployment')),
+      },
+      // Default route
+      {
+        exact: true,
+        path: `/`,
+        component: lazy(() => import('../../organisms/ExtensionsDeployment')),
+      },
+    ],
   },
 ];
 

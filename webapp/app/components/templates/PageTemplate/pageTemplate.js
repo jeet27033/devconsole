@@ -7,7 +7,7 @@ const Wrapper = styled.div`
   flex-direction: column;
   // min-height: 100vh;
   box-sizing: border-box;
-  text-align: center;
+  text-align: left;
 `;
 
 const Content = styled.section`

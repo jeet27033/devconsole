@@ -61,27 +61,6 @@ export const NavigationBar = ({
     }
   };
 
-  const getTopbarIcons = () => [
-    {
-      iconType: 'notifications',
-      key: 'notifications',
-      onClickHandler: onNotificationIconClick,
-    },
-    {
-      iconType: 'help',
-      key: 'help',
-      onClickHandler: onHelpIconClick,
-    },
-    {
-      iconType: 'settings',
-      key: 'settings',
-      disabled: true,
-      placement: 'bottomRight',
-      className: 'navigation-setting-icon',
-      toolTip: formatMessage(messages.noProductSetting),
-    },
-  ];
-
   const onNotificationIconClick = () => {
     const { notificationUrl } = props;
     if (notificationUrl) {
@@ -108,7 +87,6 @@ export const NavigationBar = ({
     history.push(item.link, { code: item.key });
   };
 
-  const topbarIcons = getTopbarIcons();
   const dropdownMenuProps = getDropdownMenu();
 
   const renderSuspenseBlock = useCallback(
@@ -137,7 +115,6 @@ export const NavigationBar = ({
           topbarMenuData={topbarMenuDataModified}
           topbarSelectedMenuData={[DEFAULT_MODULE]}
           dropdownMenuProps={dropdownMenuProps}
-          topbarIcons={topbarIcons}
           sidebarMenuData={sidebarMenuData}
           sidebarMenuItemsPosition={sidebarMenuItemsPosition}
           sidebarMenuItemClick={sidebarMenuItemClick}

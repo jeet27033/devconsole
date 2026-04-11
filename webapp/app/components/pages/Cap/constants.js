@@ -1,8 +1,4 @@
-import React from 'react';
-import { FormattedMessage } from 'react-intl';
 import { defineActionTypes } from '@capillarytech/vulcan-react-sdk/utils'
-
-import messages from './messages';
 
 const scope = "/Components/pages/Cap/"
 
@@ -29,37 +25,10 @@ export const actionTypes = defineActionTypes(
   { prefix: CURRENT_APP_NAME, scope: scope },
 );
 
-
-export const PROGRAM_PERFIX_PATH = '/program/';
-
 export const SIDEBAR_MENU_ITEM_POSITION = 'left';
-export const LOYALTY_SETTINGS_URL = '/settings';
-export const LOYALTY_NOTIFICATION_URL = '/notifications';
 export const ORG_SETTINGS_URL = '/org/index';
-export const MODULE_NAME_URL = '/settings';
-export const HELP_URL =
-  'https://support.capillarytech.com/en/support/solutions/97443';
+export const HELP_URL = 'https://support.capillarytech.com/en/support/solutions/97443';
 
-export const PRODUCTION = 'production';
-
-export const STANDARD = 'STANDARD';
-
-export const getSettingsMenuData = () => [
-  {
-    title: <FormattedMessage {...messages.message} />,
-    key: 'message',
-    link: `/loyalty/ui/settings/message`,
-  },
-  {
-    title: <FormattedMessage {...messages.reports} />,
-    key: 'reports',
-    link: `/loyalty/ui/settings/report-settings`,
-  },
-  {
-    title: <FormattedMessage {...messages.alerts} />,
-    key: 'alerts',
-    link: `/loyalty/ui/settings/alerts`,
-  },
-];
+export const getSettingsMenuData = () => [];
 
 export const getTopbarMenuDataValue = () => [];

@@ -62,7 +62,9 @@
   },
   "dependencies": {
     "@babel/polyfill": "7.0.0",
+    "@capillarytech/cap-ui-library": "^8.14.3",
     "@capillarytech/vulcan-react-sdk": "^2.4.9",
+    "@melloware/react-logviewer": "^6.5.2",
     "connected-react-router": "4.5.0",
     "ml-matrix": "6.5.0",
     "node-gyp": "^6.1.0",

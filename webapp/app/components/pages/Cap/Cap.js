@@ -12,7 +12,6 @@ import { Translations } from '@capillarytech/vulcan-react-sdk/components';
 const { useTranslations } = Translations;
 
 import { withRouter } from 'react-router';
-import { matchPath } from 'react-router-dom';
 
 import CapSpin from '@capillarytech/cap-ui-library/CapSpin';
 import CapSomethingWentWrong from '@capillarytech/cap-ui-library/CapSomethingWentWrong';
@@ -48,10 +47,7 @@ const {
 const {
   HELP_URL,
   ORG_SETTINGS_URL,
-  LOYALTY_SETTINGS_URL,
-  LOYALTY_NOTIFICATION_URL,
   SIDEBAR_MENU_ITEM_POSITION,
-  MODULE_NAME_URL,
 } = constants;
 
 const { isMultipleTabsOpen } = multipleOrgSwitch;
@@ -65,7 +61,6 @@ export const Cap = ({
   history,
   actions,
   loginActions,
-  match,
   userData,
   orgData,
   isoLangToLocizeLangMapping,
@@ -75,14 +70,6 @@ export const Cap = ({
   const { orgID, fetchingUserdata } = orgData;
   const { user, currentOrgDetails } = userData;
   const { refID } = user;
-  const matchedPath = matchPath(pathname, {
-    path: `${match.path}${MODULE_NAME_URL}`,
-  });
-
-  // need to handle for modules
-  // const { params: { moduleName } = {} } = matchedPath || {};
-  const onSettingsPage = matchedPath ? true : false;
-
   const [selectedOrgId, setSelectedOrgId] = useState(null);
   const { locale, changeLocale } = useTranslations();
 
@@ -216,12 +203,7 @@ export const Cap = ({
         <NavigationBar
           userData={userData}
           topbarMenuData={topbarMenuData}
-          showSecondaryTopBar={onSettingsPage}
           sidebarMenuItemsPosition={SIDEBAR_MENU_ITEM_POSITION}
-          settingsUrl={LOYALTY_SETTINGS_URL}
-          notificationUrl={LOYALTY_NOTIFICATION_URL}
-          orgSettingsUrl={ORG_SETTINGS_URL}
-          helpUrl={HELP_URL}
           changeOrg={changeOrg}
           history={history}
           sidebarMenuData={sidebarMenuData}
@@ -249,7 +231,6 @@ export const Cap = ({
 };
 
 Cap.propTypes = {
-  match: PropTypes.object,
   history: PropTypes.object,
   orgData: PropTypes.object,
   userData: PropTypes.object,
