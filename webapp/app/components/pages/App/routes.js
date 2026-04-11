@@ -17,6 +17,12 @@ const routes = [
         type: 'dashboard',
         component: lazy(() => import('../../organisms/ExtensionsDeployment')),
       },
+      {
+        exact: true,  
+        path: `/neo-debugger`,
+        type: 'dashboard',
+        component: lazy(() => import('../../molecules/NeoDebugger')),
+      },
       // Default route
       {
         exact: true,

@@ -92,6 +92,6 @@ export const SIDEBAR_ITEMS = [
   {
     title: 'Neo Debugger',
     key: 'neo-debugger',
-    path: 'neoDebugger',
+    path: 'neo-debugger',
   },
 ];
