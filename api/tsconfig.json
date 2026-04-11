@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "target": "es6",
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "strict": true, // allow strict type
+    "noEmitOnError": true, // generate only if there are no errors,
+    "types": ["jest", "node"],
+    "strictPropertyInitialization": false,
+    "paths": {
+      "*": ["node_modules/*"]
+    }
+  },
+  "include": ["types", "src"]
+}

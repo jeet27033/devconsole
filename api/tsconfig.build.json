@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["**/__tests__/**"] // to ignore tests directory for transpiling TS to JS
+}

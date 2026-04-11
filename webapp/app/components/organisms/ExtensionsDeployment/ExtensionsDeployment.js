@@ -271,20 +271,35 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
           {selectedBuild && (
             <CapRow type="flex" gutter={16}>
               <CapColumn span={9} className="logsDetailPane">
-                {BUILD_DETAIL_FIELDS.map((field) => (
-                  <CapRow className="logsModalDetailRow" key={field} type="flex">
-                    <CapColumn span={9}>
-                      <CapHeading className="logsModalDetailLabel" type="h5">
-                        {formatMessage(messages[field])}
-                      </CapHeading>
-                    </CapColumn>
-                    <CapColumn span={15}>
-                      <span className="logsModalDetailValue">
-                        {selectedBuild[field]}
-                      </span>
-                    </CapColumn>
-                  </CapRow>
-                ))}
+                <CapTable
+                  className="logsModalDetailTable"
+                  showHeader={false}
+                  pagination={false}
+                  columns={[
+                    {
+                      dataIndex: "label",
+                      key: "label",
+                      width: "40%",
+                      render: (text) => (
+                        <CapHeading className="logsModalDetailLabel" type="h5">
+                          {text}
+                        </CapHeading>
+                      ),
+                    },
+                    {
+                      dataIndex: "value",
+                      key: "value",
+                      render: (text) => (
+                        <span className="logsModalDetailValue">{text}</span>
+                      ),
+                    },
+                  ]}
+                  dataSource={BUILD_DETAIL_FIELDS.map((field) => ({
+                    key: field,
+                    label: formatMessage(messages[field]),
+                    value: selectedBuild[field],
+                  }))}
+                />
               </CapColumn>
               <CapColumn span={15} className="logsConsolePane">
                 <LazyLog
