@@ -21,12 +21,12 @@ const dummyData = [
   {
     key: "1",
     buildId: "59",
-    extensionName: "@capillarytech/hertz-loyaltyware-integration",
+    name: "@capillarytech/hertz-loyaltyware-integration",
     branchOrTag: "dev",
     status: "SUCCESS",
     version: "1.16.5",
     description: "Fix for CAP-151249",
-    triggeredBy: "muddasani.mahesh@capillarytech.com",
+    by: "jeet.patel@capillarytech.com",
     dateTime: "2026-03-03T10:51:09",
     consoleLogs: `[EnvInject] - Loading node environment variables.
 Building in workspace /bitnami/jenkins/home/workspace/hertz-loyaltyware-integration
@@ -53,12 +53,12 @@ BUILD SUCCESSFUL`,
   {
     key: "2",
     buildId: "BLD-002",
-    extensionName: "Campaign Extension",
+    name: "Campaign Extension",
     branchOrTag: "v2.1.0",
     status: "Failed",
     version: "2.1.0",
     description: "Hotfix for campaign flow",
-    triggeredBy: "jane.smith@capillary.com",
+    by: "ni.shah@capillary.com",
     dateTime: "2026-04-09 10:15",
     consoleLogs: `[EnvInject] - Loading node environment variables.
 Building in workspace /bitnami/jenkins/home/workspace/campaign-extension
@@ -72,12 +72,12 @@ BUILD FAILED`,
   {
     key: "3",
     buildId: "BLD-003",
-    extensionName: "Rewards Extension",
+    name: "Rewards Extension",
     branchOrTag: "feature/rewards-v3",
     status: "In Progress",
     version: "3.0.0-beta",
     description: "New rewards module",
-    triggeredBy: "alex.kumar@capillary.com",
+    by: "havi.shah@capillary.com",
     dateTime: "2026-04-11 09:00",
     consoleLogs: `[EnvInject] - Loading node environment variables.
 Building in workspace /bitnami/jenkins/home/workspace/rewards-extension
@@ -109,11 +109,11 @@ const tagOptions = [
 
 const SEARCHABLE_KEYS = [
   "buildId",
-  "extensionName",
+  "name",
   "branchOrTag",
   "version",
   "description",
-  "triggeredBy",
+  "by",
 ];
 
 const DEBOUNCE_MS = 300;
@@ -121,9 +121,9 @@ const DEBOUNCE_MS = 300;
 const BUILD_DETAIL_FIELDS = [
   "buildId",
   "dateTime",
-  "triggeredBy",
+  "by",
   "status",
-  "extensionName",
+  "name",
   "branchOrTag",
   "version",
   "description",
@@ -154,12 +154,12 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
 
   const columns = [
     { title: formatMessage(messages.buildId), dataIndex: "buildId", key: "buildId" },
-    { title: formatMessage(messages.extensionName), dataIndex: "extensionName", key: "extensionName" },
+    { title: formatMessage(messages.name), dataIndex: "name", key: "name" },
     { title: formatMessage(messages.branchOrTag), dataIndex: "branchOrTag", key: "branchOrTag" },
     { title: formatMessage(messages.status), dataIndex: "status", key: "status" },
     { title: formatMessage(messages.version), dataIndex: "version", key: "version" },
     { title: formatMessage(messages.description), dataIndex: "description", key: "description" },
-    { title: formatMessage(messages.triggeredBy), dataIndex: "triggeredBy", key: "triggeredBy" },
+    { title: formatMessage(messages.by), dataIndex: "by", key: "by" },
     { title: formatMessage(messages.dateTime), dataIndex: "dateTime", key: "dateTime" },
     {
       title: formatMessage(messages.logs),
@@ -267,9 +267,10 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
           onCancel={() => setLogsModalVisible(false)}
           footer={null}
           width={900}
+          className="logsModal"
         >
           {selectedBuild && (
-            <CapRow type="flex" gutter={16}>
+            <CapRow type="flex" gutter={16} className="logsModalContent">
               <CapColumn span={9} className="logsDetailPane">
                 <CapTable
                   className="logsModalDetailTable"
@@ -308,7 +309,6 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
                   enableSearch={false}
                   caseInsensitive
                   selectableLines
-                  height={400}
                 />
               </CapColumn>
             </CapRow>

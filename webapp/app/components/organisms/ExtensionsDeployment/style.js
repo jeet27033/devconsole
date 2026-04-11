@@ -13,7 +13,7 @@ export default css`
   .topBarRow {
     margin-bottom: ${CAP_SPACE_16};
   }
-
+  
   .searchInput {
     max-width: 25rem;
   }

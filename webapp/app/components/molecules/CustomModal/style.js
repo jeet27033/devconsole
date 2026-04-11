@@ -42,6 +42,10 @@ export const CustomModalGlobalStyles = createGlobalStyle`
     margin: ${CAP_SPACE_08} 0 ${CAP_SPACE_12} 0;
   }
 
+  .custom-modal-wrap .logsModalContent {
+    margin-bottom: ${CAP_SPACE_08};
+  }
+
   /* Logs Modal detail table */
   .custom-modal-wrap .logsDetailPane {
     padding: ${CAP_SPACE_16};

@@ -51,7 +51,7 @@ export default defineMessages({
   },
   selectBranchOrTag: {
     id: `${scope}.selectBranchOrTag`,
-    defaultMessage: 'Select a Branch or Tag',
+    defaultMessage: 'Select a Branch/Tag',
   },
   buildDescription: {
     id: `${scope}.buildDescription`,
@@ -77,13 +77,13 @@ export default defineMessages({
     id: `${scope}.buildId`,
     defaultMessage: 'Build ID',
   },
-  extensionName: {
-    id: `${scope}.extensionName`,
-    defaultMessage: 'Extension Name',
+  name: {
+    id: `${scope}.name`,
+    defaultMessage: 'Name',
   },
   branchOrTag: {
     id: `${scope}.branchOrTag`,
-    defaultMessage: 'Branch or Tag',
+    defaultMessage: 'Branch/Tag',
   },
   status: {
     id: `${scope}.status`,
@@ -97,9 +97,9 @@ export default defineMessages({
     id: `${scope}.description`,
     defaultMessage: 'Description',
   },
-  triggeredBy: {
-    id: `${scope}.triggeredBy`,
-    defaultMessage: 'Triggered By',
+  by: {
+    id: `${scope}.by`,
+    defaultMessage: 'By',
   },
   dateTime: {
     id: `${scope}.dateTime`,

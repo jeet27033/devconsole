@@ -25,7 +25,7 @@ const CustomModal = ({
       closable={closable}
       footer={footer}
       width={width}
-      style={{ maxWidth: width || 372 }}
+      style={{ maxWidth: width || "auto" }}
       wrapClassName={WRAP_CLASS}
       className={className}
       getContainer={getContainer}
@@ -50,7 +50,7 @@ CustomModal.propTypes = {
 CustomModal.defaultProps = {
   closable: true,
   footer: undefined,
-  width: 372,
+  width: "auto",
   getContainer: undefined,
   className: "",
 };
