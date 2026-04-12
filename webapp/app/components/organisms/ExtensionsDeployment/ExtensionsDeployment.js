@@ -77,7 +77,7 @@ BUILD FAILED`,
     status: "In Progress",
     version: "3.0.0-beta",
     description: "New rewards module",
-    by: "havi.shah@capillary.com",
+    by: "ni.shah@capillary.com",
     dateTime: "2026-04-11 09:00",
     consoleLogs: `[EnvInject] - Loading node environment variables.
 Building in workspace /bitnami/jenkins/home/workspace/rewards-extension

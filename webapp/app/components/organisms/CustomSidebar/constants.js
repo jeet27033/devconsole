@@ -47,7 +47,7 @@ export const SIDEBAR_ITEMS = [
       {
         title: 'DB Audit Log',
         key: 'db-audit-log',
-        path: 'mongo/auditLog',
+        path: 'db-audit-log',
       },
     ],
   },

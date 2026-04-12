@@ -27,11 +27,13 @@ export default css`
     color: ${FONT_COLOR_01};
     font-weight: 600;
     background: ${CAP_G09};
+    padding: 0.5rem 0.75rem;
   }
 
   .ant-table-tbody > tr > td {
     color: ${FONT_COLOR_02};
     background: ${CAP_WHITE};
+    padding: 0.5rem 0.75rem;
   }
 
   .ant-table-tbody > tr:hover > td {

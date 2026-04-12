@@ -29,6 +29,12 @@ const routes = [
         type: 'dashboard',
         component: lazy(() => import('../../organisms/MongodbWorkbench')),
       },
+      {
+        exact: true,
+        path: `/db-audit-log`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/DBAuditLog')),
+      },
       // Default route
       {
         exact: true,
