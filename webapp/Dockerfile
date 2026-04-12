@@ -1,7 +1,7 @@
 FROM amd64/nginx
 
 # Setting up base directory for devconsole UI
-ENV BASE_DIR=/var/www/capillary/devconsole/ui
+ENV BASE_DIR=/var/www/capillary/devconsole
 RUN echo $BASE_DIR
 
 # creating base dir

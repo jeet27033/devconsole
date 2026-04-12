@@ -1,22 +1,19 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "module": "commonjs",
+    "module": "NodeNext",
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "target": "es6",
+    "target": "ES2024",
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "sourceMap": true,
     "outDir": "dist",
-    "baseUrl": ".",
-    "strict": true, // allow strict type
-    "noEmitOnError": true, // generate only if there are no errors,
+    "rootDir": "src",
+    "strict": true,
+    "noEmitOnError": true,
     "types": ["jest", "node"],
-    "strictPropertyInitialization": false,
-    "paths": {
-      "*": ["node_modules/*"]
-    }
+    "strictPropertyInitialization": false
   },
   "include": ["types", "src"]
 }

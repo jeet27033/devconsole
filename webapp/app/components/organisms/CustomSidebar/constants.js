@@ -41,8 +41,8 @@ export const SIDEBAR_ITEMS = [
     children: [
       {
         title: 'MongoDB Workbench',
-        key: 'mongo-workbench',
-        path: 'mongo/queryMongoDB',
+        key: 'mongodb-workbench',
+        path: 'mongodb-workbench',
       },
       {
         title: 'DB Audit Log',

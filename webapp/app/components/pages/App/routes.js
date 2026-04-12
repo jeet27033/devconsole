@@ -18,10 +18,16 @@ const routes = [
         component: lazy(() => import('../../organisms/ExtensionsDeployment')),
       },
       {
-        exact: true,  
+        exact: true,
         path: `/neo-debugger`,
         type: 'dashboard',
         component: lazy(() => import('../../molecules/NeoDebugger')),
+      },
+      {
+        exact: true,
+        path: `/mongodb-workbench`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/MongodbWorkbench')),
       },
       // Default route
       {
