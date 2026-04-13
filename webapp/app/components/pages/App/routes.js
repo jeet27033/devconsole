@@ -46,6 +46,48 @@ const routes = [
         type: 'dashboard',
         component: lazy(() => import('../../organisms/BugsnagConfig')),
       },
+      {
+        exact: true,
+        path: `/log-viewer`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/LogViewer')),
+      },
+      {
+        exact: true,
+        path: `/platform-metrics`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/PlatformMetrics')),
+      },
+      {
+        exact: true,
+        path: `/app-request-logs`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/AppRequestLogs')),
+      },
+      {
+        exact: true,
+        path: `/config-management`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/ConfigManagement')),
+      },
+      {
+        exact: true,
+        path: `/migrationGateway`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/B2CGatewayConfig')),
+      },
+      {
+        exact: true,
+        path: `/alert-management/backend/issues`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/NewRelicIssues')),
+      },
+      {
+        exact: true,
+        path: `/alert-management/backend/configurations`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/NewRelicConfigurations')),
+      },
       // Default route
       {
         exact: true,
