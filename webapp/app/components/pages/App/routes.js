@@ -34,6 +34,17 @@ const routes = [
         path: `/db-audit-log`,
         type: 'dashboard',
         component: lazy(() => import('../../organisms/DBAuditLog')),
+      },{
+        exact: true,
+        path: `/alert-management/bugsnag/issues`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/BugsnagIssueListing')),
+      },
+      {
+        exact: true,
+        path: `/alert-management/bugsnag/configuration`,
+        type: 'dashboard',
+        component: lazy(() => import('../../organisms/BugsnagConfig')),
       },
       // Default route
       {

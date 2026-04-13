@@ -11,12 +11,12 @@ export const SIDEBAR_ITEMS = [
       {
         title: 'Log Viewer',
         key: 'log-viewer',
-        path: 'extensionLogViewer.html',
+        path: 'log-viewer',
       },
       {
         title: 'Platform Metrics',
         key: 'platform-metrics',
-        path: 'extensions-metrics',
+        path: 'platform-metrics',
       },
       {
         title: 'App Request Logs',
@@ -24,9 +24,9 @@ export const SIDEBAR_ITEMS = [
         path: 'app-request-logs',
       },
       {
-        title: 'Extensions Configurations',
-        key: 'extensions-config',
-        path: 'configManagement',
+        title: 'Config Management',
+        key: 'config-management',
+        path: 'config-management',
       },
       {
         title: 'B2C Gateway Config',

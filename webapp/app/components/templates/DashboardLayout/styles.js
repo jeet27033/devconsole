@@ -2,10 +2,9 @@ import { css } from 'styled-components';
 import * as styledVars from '@capillarytech/cap-ui-library/styled/variables';
 
 const {
-  CAP_SPACE_20,
   CAP_SPACE_24,
   CAP_SPACE_32,
-  BG_01,
+  CAP_WHITE,
 } = styledVars;
 
 export default css`
@@ -17,14 +16,14 @@ export default css`
 
   .sidebar-column {
     min-height: 100vh;
-    height: 100%;
     flex-shrink: 0;
+    align-self: stretch;
   }
 
   .content-column {
     flex: 1;
     min-height: 100vh;
-    background-color: ${BG_01};
+    background-color: ${CAP_WHITE};
     padding: ${CAP_SPACE_32} ${CAP_SPACE_24};
   }
 `;

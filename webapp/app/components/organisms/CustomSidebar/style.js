@@ -18,15 +18,8 @@ const MAX_DEPTH = 5;
 
 const depthPaddingRules = Array.from({ length: MAX_DEPTH }, (_, depth) => {
   const padding = BASE_PADDING + depth * INDENT_STEP;
-  return `
-    .sidebar-nav .ant-menu-submenu.depth-${depth} > .ant-menu-submenu-title {
-      padding-left: ${padding}rem !important;
-    }
-    .sidebar-nav .ant-menu-item.depth-${depth} {
-      padding-left: ${padding}rem !important;
-    }
-  `;
-}).join('');
+  return `.sidebar-item.depth-${depth} { padding-left: ${padding}rem; }`;
+}).join('\n');
 
 export default css`
   &.custom-sidebar-wrapper {
@@ -45,89 +38,57 @@ export default css`
     padding-top: 1.857rem;
   }
 
-  /* menu base */
-  .sidebar-nav.cap-menu-v2.ant-menu-inline {
-    border-right: none;
-    background: transparent;
+  .sidebar-nav {
     text-align: left;
   }
 
-  /* submenu titles */
-  .sidebar-nav .ant-menu-submenu > .ant-menu-submenu-title {
-    height: 2.857rem;
-    line-height: 2.857rem;
-    margin: 0;
-    font-size: ${FONT_SIZE_M};
-    font-weight: ${FONT_WEIGHT_MEDIUM};
-    color: ${CAP_G01};
-  }
-
-  /* nested submenus use smaller font */
-  .sidebar-nav .ant-menu-sub .ant-menu-submenu > .ant-menu-submenu-title {
-    font-size: ${FONT_SIZE_S};
-  }
-
-  .sidebar-nav .ant-menu-submenu > .ant-menu-submenu-title:hover {
-    color: ${CAP_G01};
-    background-color: ${BG_01};
-  }
-
-  /* leaf items */
-  .sidebar-nav .ant-menu-item {
+  .sidebar-item {
+    display: flex;
+    align-items: center;
     height: 2.571rem;
-    line-height: 2.571rem;
-    margin: 0 !important;
+    padding-right: 1rem;
+    cursor: pointer;
     font-size: ${FONT_SIZE_S};
     color: ${CAP_G01};
+    transition: background-color 0.15s ease;
+    user-select: none;
   }
 
-  /* top-level standalone items (no children) */
-  .sidebar-nav .ant-menu-item.top-level-item {
+  .sidebar-item:hover {
+    background-color: ${BG_01};
+    color: ${CAP_SECONDARY.base};
+  }
+
+  .sidebar-item.has-children {
     height: 2.857rem;
-    line-height: 2.857rem;
-    font-size: ${FONT_SIZE_M};
     font-weight: ${FONT_WEIGHT_MEDIUM};
   }
 
-  .sidebar-nav .ant-menu-item:hover {
-    color: ${CAP_SECONDARY.base};
-    background-color: ${BG_01};
+  .sidebar-item.depth-0 {
+    font-size: ${FONT_SIZE_M};
+    font-weight: ${FONT_WEIGHT_MEDIUM};
+    height: 2.857rem;
   }
 
-  /* selected item */
-  .sidebar-nav .ant-menu-item-selected {
-    background-color: rgba(36, 102, 234, 0.08) !important;
-    color: ${CAP_SECONDARY.base} !important;
+  .sidebar-item.active {
+    background-color: rgba(36, 102, 234, 0.08);
+    color: ${CAP_SECONDARY.base};
     font-weight: ${FONT_WEIGHT_MEDIUM};
     border-left: 0.214rem solid ${CAP_SECONDARY.base};
   }
 
-  .sidebar-nav .ant-menu-item-selected::after {
-    display: none;
+  .sidebar-item-text {
+    flex: 1;
   }
 
-  /* submenu titles always black */
-  .sidebar-nav .ant-menu-submenu-selected > .ant-menu-submenu-title,
-  .sidebar-nav .ant-menu-submenu-open > .ant-menu-submenu-title {
-    color: ${CAP_G01} !important;
+  .sidebar-arrow {
+    flex-shrink: 0;
+    color: ${CAP_G01};
   }
 
-  /* sub-menu container */
-  .sidebar-nav .ant-menu-sub.ant-menu-inline {
-    background: transparent;
-    box-shadow: none;
+  .sidebar-children {
+    /* no extra styling needed, depth padding handles indent */
   }
 
-  /* arrows always black */
-  .sidebar-nav .ant-menu-submenu-arrow::before,
-  .sidebar-nav .ant-menu-submenu-arrow::after,
-  .sidebar-nav .ant-menu-submenu-selected > .ant-menu-submenu-title > .ant-menu-submenu-arrow::before,
-  .sidebar-nav .ant-menu-submenu-selected > .ant-menu-submenu-title > .ant-menu-submenu-arrow::after,
-  .sidebar-nav .ant-menu-submenu-open > .ant-menu-submenu-title > .ant-menu-submenu-arrow::before,
-  .sidebar-nav .ant-menu-submenu-open > .ant-menu-submenu-title > .ant-menu-submenu-arrow::after {
-    background: ${CAP_G01} !important;
-  }
-
-  /* dynamic depth-based padding */
   ${depthPaddingRules}
 `;
