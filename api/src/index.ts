@@ -1,6 +1,8 @@
 import express from 'express';
 import config from './config';
 import loaders from './loaders';
+import { closeMySQLConnection } from './loaders/mysql';
+import { closeMongoConnection } from './loaders/mongo';
 
 const app = express();
 
@@ -16,6 +18,8 @@ const startServer = async (): Promise<void> => {
 
   const shutdown = async (signal: string) => {
     console.log(`${signal} received.`);
+    await closeMySQLConnection();
+    await closeMongoConnection();
     await new Promise<void>((resolve) => server.close(() => resolve()));
     console.log('Server closed.');
     process.exit(0);

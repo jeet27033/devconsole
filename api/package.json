@@ -23,6 +23,8 @@
     "express": "^5.2.1",
     "helmet": "^8.1.0",
     "http-status": "^2.1.0",
+    "mongoose": "^9.4.1",
+    "mysql2": "^3.22.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
@@ -30,6 +32,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/mongoose": "^5.11.96",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
