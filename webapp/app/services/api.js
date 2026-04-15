@@ -1,3 +1,4 @@
+
 import { apiCaller } from '@capillarytech/vulcan-react-sdk/utils';
 import endpoints from '../config/endpoints';
 import { loginPageUrl } from '../config/path';
@@ -87,8 +88,7 @@ export const getUserData = async () => {
   return httpRequest(url, getVulcanAPICallObject('GET'));
 };
 
-// Sample request for calling intouch apis, same can be followed for xaja, extension apis
-export const getCustomerData = (customerId) => {
-  const url = `${endpoints.vulcan_endpoint}/intouch/v2/customers/${customerId}`;
-  return httpRequest(url, getAryaAPICallObject('GET'));
-}
+export const getExtensionsBuildHistory = async (orgId)=> {
+  const url = `${endpoints.devconsole_endpoint}extensions/${orgId}/buildHistory`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};

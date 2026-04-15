@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import testRoute from './testRoute';
+import extensionsRoute from './extensions';
 
 declare global {
   namespace Express {
@@ -13,5 +14,6 @@ declare global {
 const router = Router();
 
 testRoute(router);
+extensionsRoute(router);
 
 export default router;

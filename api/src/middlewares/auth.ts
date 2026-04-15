@@ -21,8 +21,7 @@ export const authenticateMiddleware = () => {
 
   return middlewares.map((middleware: any) => {
     return (req: Request, res: Response, next: NextFunction) => {
-      const requestId = req.headers['x-cap-request-id'];
-      logger.info('arya auth req id:', requestId);
+      logger.info('arya auth req id:', req.headers['x-cap-request-id']);
       return middleware(req, res, next);
     };
   });

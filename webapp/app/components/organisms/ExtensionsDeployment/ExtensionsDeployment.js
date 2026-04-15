@@ -58,7 +58,7 @@ BUILD SUCCESSFUL`,
     status: "Failed",
     version: "2.1.0",
     description: "Hotfix for campaign flow",
-    by: "ni.shah@capillary.com",
+    by: "n.shah@capillary.com",
     dateTime: "2026-04-09 10:15",
     consoleLogs: `[EnvInject] - Loading node environment variables.
 Building in workspace /bitnami/jenkins/home/workspace/campaign-extension
@@ -77,7 +77,7 @@ BUILD FAILED`,
     status: "In Progress",
     version: "3.0.0-beta",
     description: "New rewards module",
-    by: "ni.shah@capillary.com",
+    by: "n.shah@capillary.com",
     dateTime: "2026-04-11 09:00",
     consoleLogs: `[EnvInject] - Loading node environment variables.
 Building in workspace /bitnami/jenkins/home/workspace/rewards-extension

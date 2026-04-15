@@ -1,5 +1,5 @@
-import Arya from '@capillarytech/arya';
+import Arya from "@capillarytech/arya";
 
-const logger = Arya.Logger.getLogger('devconsole-api');
+const logger = Arya.Logger.getLogger("devconsole-api");
 
 export default logger;

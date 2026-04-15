@@ -15,7 +15,7 @@ export default async (app: express.Application) => {
   app.use(express.json({ limit: '5mb' }));
   app.use(express.urlencoded({ extended: true }));
 
-  app.use('/api', routes);
+  app.use('/devconsole/api', routes);
 
   app.use((_req, res) => {
     res.status(404).json({ success: false, error: 'Route not found' });
