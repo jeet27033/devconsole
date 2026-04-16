@@ -8,7 +8,7 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'test',
   cluster: process.env.CLUSTER || 'crm-nightly-new',
   INTOUCH_INTERNAL_API_URL: process.env.INTOUCH_INTERNAL_API_URL || '',
-  INTOUCH_INTERNAL_API_KEY: process.env.INTOUCH_INTERNAL_API_KEY ||  '',
+  INTOUCH_INTERNAL_API_KEY: process.env.INTOUCH_INTERNAL_API_KEY || '',
   ORG_SETTINGS_SERVICE_HOST: process.env.ORG_SETTINGS_SERVICE_HOST || '',
   VULCAN_SERVICE_HOST: process.env.VULCAN_SERVICE_HOST || '',
   API_GATEWAY_EXTENSIONS_HOST: process.env.API_GATEWAY_EXTENSIONS_HOST || '',
@@ -25,6 +25,9 @@ const config = {
   // MongoDB
   MONGO_URI: process.env.MONGO_URI || '',
   MONGO_POOL_SIZE: parseInt(process.env.MONGO_POOL_SIZE || '', 10),
+
+  JENKINS_URL: process.env.JENKINS_URL || '',
+  JENKINS_AUTH: process.env.JENKINS_AUTH || '',
 };
 
 export default config;

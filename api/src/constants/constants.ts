@@ -21,3 +21,4 @@ export const CACHE_OPTIONS ={
         sentinelMaxConnections: process.env.SENTINEL_MAX_CONNECTIONS && parseInt(process.env.SENTINEL_MAX_CONNECTIONS) || 10,
     },
 }
+export const IN_PROGRESS = 'IN PROGRESS';

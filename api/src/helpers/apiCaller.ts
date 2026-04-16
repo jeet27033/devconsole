@@ -2,7 +2,7 @@ import logger from "./logger";
 
 interface ApiCallerOptions {
   url: string;
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   headers?: Record<string, string>;
   timeout?: number;
@@ -17,7 +17,7 @@ interface ApiResponse<T = unknown> {
 export const callApi = async <T = unknown>(
   options: ApiCallerOptions
 ): Promise<ApiResponse<T>> => {
-  const { url, method, body, headers = {}, timeout = 30000 } = options;
+  const { url, body, method = 'GET' , headers = {}, timeout = 30000 } = options;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
