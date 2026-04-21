@@ -5,8 +5,11 @@ import { loginPageUrl } from '../config/path';
 import * as requestConstructor from './requestConstructor';
 import { i18n, appType, appName } from '../../app-config';
 import { IS_PROD } from '../config/constants';
-
+import * as authWrapper from '../utils/authWrapper';
 const { getVulcanAPICallObject, getAryaAPICallObject } = requestConstructor;
+
+// const { getAuthenticationDetails } = authWrapper;
+// const { orgID } = getAuthenticationDetails();
 
 function redirectIfUnauthenticated(response) {
   const { removeAuthenticationDetais } = require('../utils/authWrapper');
@@ -88,7 +91,7 @@ export const getUserData = async () => {
   return httpRequest(url, getVulcanAPICallObject('GET'));
 };
 
-export const getExtensionsBuildHistory = async (orgId)=> {
-  const url = `${endpoints.devconsole_endpoint}extensions/${orgId}/buildHistory`;
+export const getExtensionsBuildHistory = async ()=> {
+  const url = `${endpoints.devconsole_endpoint}/extensions/build-history`;
   return httpRequest(url, getVulcanAPICallObject('GET'));
 };

@@ -1,4 +1,8 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import PropTypes from "prop-types";
+import { connect } from "react-redux";
+import { compose, bindActionCreators } from "redux";
+import { createStructuredSelector } from "reselect";
 import {
   CapButton,
   CapRow,
@@ -11,83 +15,25 @@ import {
 import CapHeading from "@capillarytech/cap-ui-library/CapHeading";
 import { withRouter } from "react-router";
 import { injectIntl } from "react-intl";
+import {
+  injectSaga,
+  injectReducer,
+  withStyles,
+} from "@capillarytech/vulcan-react-sdk/utils";
 import styles from "./style";
 import messages from "./messages";
-import { withStyles } from "@capillarytech/vulcan-react-sdk/utils";
 import CustomModal from "../../molecules/CustomModal";
 import { LazyLog } from "@melloware/react-logviewer";
-
-const dummyData = [
-  {
-    key: "1",
-    buildId: "59",
-    name: "@capillarytech/hertz-loyaltyware-integration",
-    branchOrTag: "dev",
-    status: "SUCCESS",
-    version: "1.16.5",
-    description: "Fix for CAP-151249",
-    by: "jeet.patel@capillarytech.com",
-    dateTime: "2026-03-03T10:51:09",
-    consoleLogs: `[EnvInject] - Loading node environment variables.
-Building in workspace /bitnami/jenkins/home/workspace/hertz-loyaltyware-integration
-[hertz-loyaltyware-integration] $ /bin/sh -xe /tmp/jenkins15768460679437265158.sh
-+ export NVM_DIR=/bitnami/jenkins/home/.nvm
-+ [ ! -s /bitnami/jenkins/home/.nvm/nvm.sh ]
-+ . /bitnami/jenkins/home/.nvm/nvm.sh
-+ NVM_SCRIPT_SOURCE=
-+ [ -z ]
-+ export NVM_CD_FLAGS=
-+ nvm_is_zsh
-+ [ -n ]
-+ [ -z /bitnami/jenkins/home/.nvm ]
-+ unset NVM_SCRIPT_SOURCE
-+ nvm_process_parameters
-+ local NVM_AUTO_MODE=use
-+ NVM_AUTO_MODE=use
-+ [ 0 -ne 0 ]
-+ nvm_auto use
-+ local NVM_MODE
-+ NVM_MODE=use
-BUILD SUCCESSFUL`,
-  },
-  {
-    key: "2",
-    buildId: "BLD-002",
-    name: "Campaign Extension",
-    branchOrTag: "v2.1.0",
-    status: "Failed",
-    version: "2.1.0",
-    description: "Hotfix for campaign flow",
-    by: "n.shah@capillary.com",
-    dateTime: "2026-04-09 10:15",
-    consoleLogs: `[EnvInject] - Loading node environment variables.
-Building in workspace /bitnami/jenkins/home/workspace/campaign-extension
-ERROR: Build failed with exit code 1
-npm ERR! code ELIFECYCLE
-npm ERR! errno 1
-npm ERR! campaign-extension@2.1.0 build: node scripts/build.js
-npm ERR! Exit status 1
-BUILD FAILED`,
-  },
-  {
-    key: "3",
-    buildId: "BLD-003",
-    name: "Rewards Extension",
-    branchOrTag: "feature/rewards-v3",
-    status: "In Progress",
-    version: "3.0.0-beta",
-    description: "New rewards module",
-    by: "n.shah@capillary.com",
-    dateTime: "2026-04-11 09:00",
-    consoleLogs: `[EnvInject] - Loading node environment variables.
-Building in workspace /bitnami/jenkins/home/workspace/rewards-extension
-[rewards-extension] $ /bin/sh -xe /tmp/jenkins98234756.sh
-+ npm install
-added 1247 packages in 45s
-+ npm run build
-Building rewards module v3.0.0-beta...`,
-  },
-];
+import { getAuthenticationDetails } from "../../../utils/authWrapper";
+import sagas from "./saga";
+import reducer from "./reducer";
+import * as actions from "./action";
+import { REDUCER_KEY } from "./constants";
+import {
+  makeSelectBuildHistory,
+  makeSelectFetchingBuildHistory,
+} from "./selectors";
+import { REQUEST } from "../../pages/App/constants";
 
 const extensionOptions = [
   { key: "loyalty", label: "Loyalty Extension", value: "loyalty" },
@@ -129,7 +75,26 @@ const BUILD_DETAIL_FIELDS = [
   "description",
 ];
 
-const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
+const mapBuildHistoryRow = (row) => ({
+  key: String(row.depId),
+  buildId: String(row.depId),
+  name: row.extensionName,
+  branchOrTag: row.branchOrTag,
+  status: row.status,
+  version: row.version,
+  description: row.description,
+  by: row.triggeredBy,
+  dateTime: row.auto_update_time,
+  consoleLogs: row.consoleLogs || "",
+});
+
+const ExtensionsDeployment = ({
+  className,
+  intl: { formatMessage },
+  buildHistory,
+  fetchingBuildHistory,
+  actions: boundActions,
+}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [logsModalVisible, setLogsModalVisible] = useState(false);
   const [selectedBuild, setSelectedBuild] = useState(null);
@@ -137,6 +102,10 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
   const [searchText, setSearchText] = useState("");
   const [inputValue, setInputValue] = useState("");
   const debounceRef = useRef(null);
+
+  useEffect(() => {
+    boundActions.getExtensionsBuildHistory();
+  }, [boundActions]);
 
   const handleSearchChange = useCallback((e) => {
     const value = e.target.value;
@@ -151,6 +120,11 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
     setSelectedBuild(record);
     setLogsModalVisible(true);
   };
+
+  const tableData = useMemo(
+    () => (buildHistory || []).map(mapBuildHistoryRow),
+    [buildHistory],
+  );
 
   const columns = [
     { title: formatMessage(messages.buildId), dataIndex: "buildId", key: "buildId" },
@@ -174,11 +148,11 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
     },
   ];
 
-  const filteredData = dummyData.filter((row) => {
+  const filteredData = tableData.filter((row) => {
     if (!searchText) return true;
     const query = searchText.toLowerCase();
     return SEARCHABLE_KEYS.some((key) =>
-      (row[key] || "").toLowerCase().includes(query)
+      (row[key] || "").toString().toLowerCase().includes(query)
     );
   });
 
@@ -201,7 +175,11 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
           </CapColumn>
         </CapRow>
 
-        <CapTable columns={columns} dataSource={filteredData} />
+        <CapTable
+          columns={columns}
+          dataSource={filteredData}
+          loading={fetchingBuildHistory === REQUEST}
+        />
 
         {/* Deploy Extension Modal */}
         <CustomModal
@@ -319,4 +297,32 @@ const ExtensionsDeployment = ({ className, intl: { formatMessage } }) => {
   );
 };
 
-export default withRouter(injectIntl(withStyles(ExtensionsDeployment, styles)));
+ExtensionsDeployment.propTypes = {
+  className: PropTypes.string,
+  buildHistory: PropTypes.array,
+  fetchingBuildHistory: PropTypes.string,
+  actions: PropTypes.object.isRequired,
+};
+
+const mapStateToProps = createStructuredSelector({
+  buildHistory: makeSelectBuildHistory(),
+  fetchingBuildHistory: makeSelectFetchingBuildHistory(),
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators(actions, dispatch),
+});
+
+const withConnect = connect(mapStateToProps, mapDispatchToProps);
+
+const withSaga = sagas.map((saga, index) =>
+  injectSaga({ key: `${REDUCER_KEY}-${index}`, saga }),
+);
+
+const withReducer = injectReducer({ key: REDUCER_KEY, reducer });
+
+export default compose(
+  ...withSaga,
+  withReducer,
+  withConnect,
+)(withRouter(injectIntl(withStyles(ExtensionsDeployment, styles))));

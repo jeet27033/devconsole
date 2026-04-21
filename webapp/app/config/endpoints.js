@@ -3,14 +3,14 @@ import { appName, appType, intouchBaseUrl } from "../../app-config";
 
 const enviromentEndpoints = {
   absoluteUrls: {
-    devconsole_endpoint: `http://localhost:3000/devconsole/api/`,
+    devconsole_endpoint: `http://localhost:3000/devconsole/api`,
     vulcan_endpoint: `https://${intouchBaseUrl}/vulcan/api/v1`,
     arya_endpoint: `https://${intouchBaseUrl}/arya/api/v1`,
   },
   partialUrls: {
     vulcan_endpoint: '/vulcan/api/v1',
     arya_endpoint: '/arya/api/v1',
-    devconsole_endpoint: '/devconsole/api/',
+    devconsole_endpoint: '/devconsole/api',
   },
 };
 

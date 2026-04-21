@@ -1,8 +1,20 @@
-import { Router, Request, Response , NextFunction } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import Arya from '@capillarytech/arya';
-import { authenticateMiddleware } from '../middlewares/auth';
-import { SuccessResponse, ErrorResponse , ApiError } from '../helpers/responseHandler';
-import {getExtensionsBuildHistory} from '../services/extensions';
+import { authenticateMiddleware, validate } from '../middlewares';
+import {
+  SuccessResponse,
+  ErrorResponse,
+} from '../helpers/responseHandler';
+import {
+  getExtensionsBuildHistory,
+  getExtensionsBuildLogs,
+  getExtensionsBuildMetaData,
+  extensionsTriggerBuild
+} from '../services/extensions';
+import {
+  buildLogsBodySchema,
+  triggerBuildBodySchema,
+} from '../joiSchema/extensions';
 import { v4 as uuidv4 } from 'uuid';
 import { errorMsg } from '../constants/error-msg';
 
@@ -18,20 +30,68 @@ route.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 export default (app: Router) => {
-    app.use('/extensions', route);
+  app.use('/extensions', route);
 
-    route.get(
+  route.get(
     '/build-history',
     authenticateMiddleware(),
     async (req: Request, res: Response) => {
-        try {
-            const { orgId } = req as any;
-            const response = await getExtensionsBuildHistory(orgId);
-            return SuccessResponse(res, response, 200);
-        } catch (e) {
-            logger.error('Error fetching homepage metrics', e);
-            return ErrorResponse(res, e);
-        }
+      try {
+        const { orgId } = req as any;
+        const response = await getExtensionsBuildHistory(orgId);
+        return SuccessResponse(res, response, 200);
+      } catch (e) {
+        logger.error('Error fetching homepage metrics', e);
+        return ErrorResponse(res, e);
+      }
     },
-    );
+  );
+
+  route.post(
+    '/build-logs',
+    authenticateMiddleware(),
+    validate(buildLogsBodySchema),
+    async (req: Request, res: Response) => {
+      try {
+        const { buildId, extensionName } = req.body;
+        const response = await getExtensionsBuildLogs(buildId, extensionName);
+        return SuccessResponse(res, response, 200);
+      } catch (e) {
+        logger.error('Error fetching homepage metrics', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
+  route.get(
+    '/build-meta',
+    authenticateMiddleware(),
+    async (req: Request, res: Response) => {
+      try {
+        const { orgId , userId } = req as any;
+        const response = await getExtensionsBuildMetaData(orgId, userId);
+        return SuccessResponse(res, response, 200);
+      } catch (e) {
+        logger.error('Error fetching homepage metrics', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
+    route.get(
+    '/build-trigger',
+    authenticateMiddleware(),
+    validate(triggerBuildBodySchema),
+    async (req: Request, res: Response) => {
+      try {
+        const { orgId , userId } = req as any;
+        const body = req.body;
+        const response = await extensionsTriggerBuild(orgId, userId , body);
+        return SuccessResponse(res, response, 200);
+      } catch (e) {
+        logger.error('Error fetching homepage metrics', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
 };

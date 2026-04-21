@@ -9,8 +9,8 @@ const app = express();
 const startServer = async (): Promise<void> => {
   await loaders(app);
 
-  const server = app.listen(config.port, () =>
-    console.log(`Server is listening on port ${config.port}`)
+  const server = app.listen(config.PORT, () =>
+    console.log(`Server is listening on port ${config.PORT}`)
   );
 
   server.keepAliveTimeout = 65000;

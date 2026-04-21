@@ -9,3 +9,5 @@ export const EXTERNAL = 'external';
 export const GTM_EVENTS = {
   USER_AUTHENTICATED: 'userAuthenticated',
 };
+
+export const DEVCONSOLE = 'Devconsole';

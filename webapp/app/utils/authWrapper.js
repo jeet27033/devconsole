@@ -64,3 +64,12 @@ export const getAuthenticationDetails = () => ({
   user: localStorageApi.loadItem('user'),
   ouId: localStorageApi.loadItem('ouId'),
 });
+
+
+// export const isDevconsoleUIEnabled = connectedRouterRedirect({
+//   authenticatedSelector: hasDevconsoleUIFeature(),
+//   redirectPath: `${publicPath}/not-enabled`,
+//   wrapperDisplayName: 'NeoEnabled',
+//   allowRedirectBack: false,
+// });
+

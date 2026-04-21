@@ -1,6 +1,8 @@
 import { authenticateMiddleware, authenticateMiddlewareWithProxy } from "./auth";
+import { validate } from "./validate";
 
-export { 
-    authenticateMiddleware, 
-    authenticateMiddlewareWithProxy 
+export {
+    authenticateMiddleware,
+    authenticateMiddlewareWithProxy,
+    validate
 };

@@ -2,32 +2,88 @@ import config from '../config';
 import logger from '../helpers/logger';
 import { callApi } from '../helpers/apiCaller';
 import { getMySQLPool } from '../loaders/mysql';
-import { IN_PROGRESS } from '../constants/constants';
+import {
+  IN_PROGRESS,
+  SLAVE_APITESTER,
+  CAPILLARY_NPM_PREFIX,
+  GITHUB_API_BASE,
+  EXTENSIONS_REPO_OWNER,
+  GITHUB_ACCEPT_HEADER,
+  HEALTHCARE_FRONTEND_PACKAGE,
+  HEALTHCARE_FRONTEND_REPO,
+  HEALTHCARE_LOYALTYWARE_REPO,
+  HEALTHCARE_LOYALTYWARE_PACKAGES,
+  GITHUB_BRANCHES_PER_PAGE,
+  BRANCH_EXCLUDE_PREFIXES,
+  BUILD_POLL_MAX_RETRIES,
+  BUILD_POLL_INTERVAL_MS,
+  DEVCONSOLE_USER_AGENT,
+  ORG_HIERARCHY_PATH,
+  ORG_EXTENSIONS_GROUPINGS_PATH,
+  SLAVE_EXTENSION_HELPER_PATH,
+} from '../constants/constants';
+import { buildExtensionJobConfigXml } from '../constants/constants';
+import {
+  ExtensionGitMetaData,
+  ExtensionBuildRecord,
+} from '../types/extensions';
+
+const githubHeaders = () => ({
+  Authorization: `token ${config.GITHUB_TOKEN}`,
+  Accept: GITHUB_ACCEPT_HEADER,
+});
+
+const intouchHeaders = (orgId: number | string) => ({
+  'X-CAP-API-AUTH-KEY': config.INTOUCH_INTERNAL_API_KEY,
+  'X-CAP-API-AUTH-ORG-ID': String(orgId),
+  'User-Agent': DEVCONSOLE_USER_AGENT,
+});
+
+const jenkinsAuthHeader = () => ({ Authorization: config.JENKINS_AUTH ?? '' });
+
+const jenkinsBasicAuth = () =>
+  'Basic ' +
+  Buffer.from(`${config.JENKINS_USER}:${config.JENKINS_API_TOKEN}`).toString(
+    'base64',
+  );
+
+const jenkinsBaseUrl = () => `http://${config.JENKINS_URL}`;
+
+const githubRepoApi = (repo: string) =>
+  `${GITHUB_API_BASE}/repos/${EXTENSIONS_REPO_OWNER}/${repo}`;
+
+const stripPackagePrefix = (packageName: string) =>
+  packageName.replace(CAPILLARY_NPM_PREFIX, '');
+
+const resolveRepoName = (packageName: string) => {
+  if (packageName === HEALTHCARE_FRONTEND_PACKAGE) {
+    return HEALTHCARE_FRONTEND_REPO;
+  }
+  if (HEALTHCARE_LOYALTYWARE_PACKAGES.has(packageName)) {
+    return HEALTHCARE_LOYALTYWARE_REPO;
+  }
+  return stripPackagePrefix(packageName);
+};
+
+const parseGithubRepo = (githubUrl: string) => {
+  const match = githubUrl.match(/github\.com[/:]([^/]+)\/([^/.]+)/);
+  return match ? { owner: match[1], repo: match[2] } : null;
+};
 
 const callInternalApi = async (orgId: number) => {
-  const url = `${config.INTOUCH_INTERNAL_API_URL}/v2/internal/organization/${orgId}/hierarchy`;
-  const headers = {
-    'X-CAP-API-AUTH-KEY': `${config.INTOUCH_INTERNAL_API_KEY}`,
-    'X-CAP-API-AUTH-ORG-ID': orgId.toString(),
-    'User-Agent': 'devconsole',
-  };
+  const url = `${config.INTOUCH_INTERNAL_API_URL}${ORG_HIERARCHY_PATH}/${orgId}/hierarchy`;
   try {
-    const response = await callApi({
-      url,
-      headers,
-    });
-    return response;
+    return await callApi({ url, headers: intouchHeaders(orgId) });
   } catch (error) {
     logger.error(
-      `Error calling internal API for org id ${orgId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `callInternalApi: org ${orgId} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
     throw error;
   }
 };
 
-export const getParentOrgId = async (orgId: number) => {
-  logger.info(`Getting parent org id for org id: ${orgId}`);
-  logger.info(`calling ${config.INTOUCH_INTERNAL_API_URL}`);
+const getParentOrgId = async (orgId: number) => {
+  logger.info(`getParentOrgId: resolving for org ${orgId}`);
   try {
     const response = await callInternalApi(orgId);
     const hierarchyData = response.data as Record<string, any>;
@@ -36,418 +92,74 @@ export const getParentOrgId = async (orgId: number) => {
     if (baseOrg.orgType === 'SUPER_ORG' || baseOrg.orgType === 'STANDARD_ORG') {
       return orgId;
     }
-
     const connectedOrgs: Array<Record<string, any>> =
       hierarchyData.connectedOrganizations || [];
-    for (const org of connectedOrgs) {
-      if (org.orgType === 'SUPER_ORG') {
-        return org.id;
-      }
-    }
-
-    return orgId;
-  } catch (error) {
-    logger.error(
-      `getParentOrgId: Failed to fetch org hierarchy for org: ${orgId}`,
-    );
+    const superOrg = connectedOrgs.find((o) => o.orgType === 'SUPER_ORG');
+    return superOrg?.id ?? orgId;
+  } catch {
+    logger.error(`getParentOrgId: failed for org ${orgId}`);
   }
 };
 
-export const isParentOrg = async (orgId: number) => {
-  logger.info(`isParentOrg: Checking if org ${orgId} is a parent org`);
-  try {
-    const response = await callInternalApi(orgId);
-    const hierarchyData = response.data as Record<string, any>;
-    const baseOrg = hierarchyData.baseOrganization || {};
-    const result = baseOrg.orgType === 'SUPER_ORG';
-    logger.info(`isParentOrg: org ${orgId} isParent=${result}`);
-    return result;
-  } catch (error) {
-    logger.error(
-      `isParentOrg: Failed to fetch org hierarchy for org: ${orgId}`,
-    );
-    return false;
-  }
-};
-
-export const isParentOrStandardOrg = async (orgId: number) => {
-  logger.info(`isParentOrStandardOrg: Checking org ${orgId}`);
-  try {
-    const response = await callInternalApi(orgId);
-    const hierarchyData = response.data as Record<string, any>;
-    const baseOrg = hierarchyData.baseOrganization || {};
-    const result =
-      baseOrg.orgType === 'SUPER_ORG' || baseOrg.orgType === 'STANDARD_ORG';
-    logger.info(`isParentOrStandardOrg: org ${orgId} result=${result}`);
-    return result;
-  } catch (error) {
-    logger.error(
-      `isParentOrStandardOrg: Failed to fetch org hierarchy for org: ${orgId}`,
-    );
-    return false;
-  }
-};
-
-export const fetchOrgExtensionsFromIntouch = async (orgId: number) => {
-  logger.info(
-    `fetchOrgExtensionsFromIntouch: Fetching extensions for org: ${orgId}`,
-  );
+const fetchOrgExtensionsFromIntouch = async (orgId: number) => {
+  logger.info(`fetchOrgExtensionsFromIntouch: org ${orgId}`);
   try {
     const parentOrgId = await getParentOrgId(orgId);
-    logger.info(
-      `fetchOrgExtensionsFromIntouch: Using parent org id: ${parentOrgId}`,
-    );
+    logger.info(`fetchOrgExtensionsFromIntouch: parent org ${parentOrgId}`);
 
-    const url = `${config.ORG_SETTINGS_SERVICE_HOST}/arya/api/v1/org-settings/avengers-metadata-v2/v2/org/extension/groupings`;
-    const headers = {
-      Authorization: `Bearer ${config.INTOUCH_INTERNAL_API_KEY}`,
-      'Content-Type': 'application/json',
-      'User-Agent': 'devconsole',
-    };
-    const body = {
-      fullSet: false,
-      orgs: [String(parentOrgId)],
-    };
-
-    const response = await callApi({ url, method: 'POST', headers, body });
+    const url = `${config.ORG_SETTINGS_SERVICE_HOST}${ORG_EXTENSIONS_GROUPINGS_PATH}`;
+    const response = await callApi({
+      url,
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.INTOUCH_INTERNAL_API_KEY}`,
+        'Content-Type': 'application/json',
+        'User-Agent': DEVCONSOLE_USER_AGENT,
+      },
+      body: { fullSet: false, orgs: [String(parentOrgId)] },
+    });
     const data = response.data as Record<string, any>;
     return data.result[String(parentOrgId)];
-  } catch (error) {
-    logger.error(
-      `fetchOrgExtensionsFromIntouch: Intouch call failed, Request for org: ${orgId}`,
-    );
+  } catch {
+    logger.error(`fetchOrgExtensionsFromIntouch: failed for org ${orgId}`);
     return null;
   }
 };
-
-export const fetchVulcanApps = async (orgId: number, apiToken: string) => {
-  logger.info(`fetchVulcanApps: Fetching Vulcan apps for org: ${orgId}`);
-  try {
-    const url = `${config.VULCAN_SERVICE_HOST}/vulcan/api/v1/metadata/list?limit=1000&offset=0`;
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiToken}`,
-      'x-cap-api-auth-org-id': orgId.toString(),
-      'User-Agent': 'devconsole',
-    };
-
-    const response = await callApi({ url, headers });
-    const data = response.data as Record<string, any>;
-    return data.result.applications;
-  } catch (error) {
-    logger.error(
-      `fetchVulcanApps: Vulcan call failed, Request for org: ${orgId}`,
-    );
-    return null;
-  }
-};
-
-export const fetchExtensionDetails = async (
-  packageName: string,
-  apiToken: string,
-  orgId: string,
-  userId: string,
-) => {
-  logger.info(
-    `fetchExtensionDetails: Fetching details for package: ${packageName}, org: ${orgId}`,
-  );
-  const url = `${config.ORG_SETTINGS_SERVICE_HOST}/arya/api/v1/org-settings/avengers-metadata-v2/v2/extensions?packageName=${packageName}`;
-  const headers = {
-    'x-cap-api-auth-org-id': orgId,
-    'x-cap-remote-user': userId,
-    Authorization: `Bearer ${apiToken}`,
-    'User-Agent': 'devconsole',
-  };
-
-  const response = await callApi({ url, headers });
-  if (response.success) {
-    const data = response.data as Record<string, any>;
-    const extensions = data.result?.extensions || [];
-    if (extensions.length > 0) {
-      return extensions[0].repoLink || '';
-    }
-    return '';
-  }
-  throw new Error(`Failed to fetch extension details: ${response.status}`);
-};
-
-export const getMigrationKeys = async (orgId: number) => {
-  logger.info(`getMigrationKeys: Fetching migration keys for org: ${orgId}`);
-  try {
-    if (!config.API_GATEWAY_EXTENSIONS_HOST) {
-      return {
-        status: 'FAILED',
-        data: [],
-        message: 'API_GATEWAY_EXTENSIONS_HOST environment variable not set',
-      };
-    }
-    if (!config.API_GATEWAY_EXTENSIONS_AUTH) {
-      return {
-        status: 'FAILED',
-        data: [],
-        message: 'API_GATEWAY_EXTENSIONS_AUTH environment variable not set',
-      };
-    }
-
-    const url = `${config.API_GATEWAY_EXTENSIONS_HOST}/api/oauth-clients/org/${orgId}`;
-    const headers = {
-      Accept: 'application/json',
-      Authorization: config.API_GATEWAY_EXTENSIONS_AUTH,
-      'User-Agent': 'devconsole',
-    };
-
-    const response = await callApi({
-      url,
-      headers,
-      timeout: 10000,
-    });
-    const data = response.data as any;
-
-    let resultList: any[] = [];
-    if (Array.isArray(data)) {
-      resultList = data;
-    } else if (data?.data) {
-      resultList = data.data;
-    } else if (data?.result) {
-      resultList = data.result;
-    } else {
-      logger.error(`getMigrationKeys: Unexpected API response format`);
-      return {
-        status: 'FAILED',
-        data: [],
-        message: 'Unexpected API response format',
-      };
-    }
-
-    return {
-      status: 'SUCCESS',
-      data: resultList,
-      message: 'Keys retrieved successfully',
-    };
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(
-      `getMigrationKeys: Failed for org_id: ${orgId}, error: ${msg}`,
-    );
-    return { status: 'FAILED', data: [], message: msg };
-  }
-};
-
-export const createMigrationKey = async (
-  orgId: number,
-  clientKey: string,
-  clientSecret: string,
-  accessType: string,
-  isActive: boolean = true,
-) => {
-  logger.info(
-    `createMigrationKey: Creating migration key for org: ${orgId}, accessType: ${accessType}`,
-  );
-  try {
-    const url = `${config.API_GATEWAY_EXTENSIONS_HOST}/api/oauth-clients`;
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: config.API_GATEWAY_EXTENSIONS_AUTH,
-      'User-Agent': 'devconsole',
-    };
-    const body = {
-      orgId,
-      clientKey,
-      clientSecret,
-      isActive,
-      accessType: accessType.toUpperCase(),
-    };
-
-    const response = await callApi({
-      url,
-      method: 'POST',
-      headers,
-      body,
-      timeout: 10000,
-    });
-    return {
-      status: 'SUCCESS',
-      message: 'Key created successfully',
-      data: response.data,
-    };
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(
-      `createMigrationKey: Failed for org_id: ${orgId}, error: ${msg}`,
-    );
-    return { status: 'FAILED', message: msg };
-  }
-};
-
-export const getWhitelistApis = async (orgId: number) => {
-  logger.info(`getWhitelistApis: Fetching whitelist APIs for org: ${orgId}`);
-  try {
-    if (!config.API_GATEWAY_EXTENSIONS_HOST) {
-      return {
-        status: 'FAILED',
-        data: [],
-        message: 'API_GATEWAY_EXTENSIONS_HOST environment variable not set',
-      };
-    }
-    if (!config.API_GATEWAY_EXTENSIONS_AUTH) {
-      return {
-        status: 'FAILED',
-        data: [],
-        message: 'API_GATEWAY_EXTENSIONS_AUTH environment variable not set',
-      };
-    }
-
-    const url = `${config.API_GATEWAY_EXTENSIONS_HOST}/api/whitelist-apis/org/${orgId}`;
-    const headers = {
-      Accept: 'application/json',
-      Authorization: config.API_GATEWAY_EXTENSIONS_AUTH,
-      'User-Agent': 'devconsole',
-    };
-
-    const response = await callApi({
-      url,
-      headers,
-      timeout: 10000,
-    });
-    const data = response.data as any;
-
-    let resultList: any[] = [];
-    if (Array.isArray(data)) {
-      resultList = data;
-    } else if (data?.data) {
-      resultList = data.data;
-    } else if (data?.result) {
-      resultList = data.result;
-    } else {
-      logger.error(`getWhitelistApis: Unexpected API response format`);
-      return {
-        status: 'FAILED',
-        data: [],
-        message: 'Unexpected API response format',
-      };
-    }
-
-    return {
-      status: 'SUCCESS',
-      data: resultList,
-      message: 'APIs retrieved successfully',
-    };
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(
-      `getWhitelistApis: Failed for org_id: ${orgId}, error: ${msg}`,
-    );
-    return { status: 'FAILED', data: [], message: msg };
-  }
-};
-
-export const createWhitelistApi = async (
-  relativeUrl: string,
-  requestType: string,
-  orgId: number,
-  tokenType: string,
-  isWhitelisted: boolean = true,
-  createdBy?: string,
-) => {
-  logger.info(
-    `createWhitelistApi: Creating whitelist API for org: ${orgId}, url: ${relativeUrl}, method: ${requestType}`,
-  );
-  try {
-    const url = `${config.API_GATEWAY_EXTENSIONS_HOST}/api/whitelist-apis`;
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: config.API_GATEWAY_EXTENSIONS_AUTH,
-      'User-Agent': 'devconsole',
-    };
-    const body: Record<string, any> = {
-      orgId,
-      relativeUrl,
-      requestType: requestType.toUpperCase(),
-      isWhitelisted,
-      tokenType: tokenType?.toUpperCase() || 'WRITE',
-    };
-    if (createdBy) {
-      body.createdBy = createdBy;
-      body.updatedBy = createdBy;
-    }
-
-    const response = await callApi({
-      url,
-      method: 'POST',
-      headers,
-      body,
-      timeout: 10000,
-    });
-    return {
-      status: 'SUCCESS',
-      message: 'Whitelist API created successfully',
-      data: response.data,
-    };
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(
-      `createWhitelistApi: Failed for org_id: ${orgId}, error: ${msg}`,
-    );
-    return { status: 'FAILED', message: msg };
-  }
-};
-
-// const getJenkinsJobNameFromExtName = (extensionName: string) => {};
-
-// const extensionsBuildLogs = (
-//   buildId: number,
-//   extensionName: string,
-//   tenantid: number = 1,
-// ) => {
-//   logger.info(
-//     `extensionsBuildLogs: Fetching build logs for buildId: ${buildId}, extension: ${extensionName}`,
-//   );
-// };
 
 const syncDeploymentStatusFromJenkins = async (extensionList: string[]) => {
   const mySqlPool = getMySQLPool();
   const [buildRows] = await mySqlPool.query(
-    'SELECT depId FROM extensions_deployment WHERE status=? AND extensionName IN (?)',
+    'SELECT depId, jobName FROM extensions_deployment WHERE status=? AND extensionName IN (?)',
     [IN_PROGRESS, extensionList],
   );
-  console.log('build rows ', buildRows);
-  const buildIds = (buildRows as any[]).map((row) => row?.depId);
-  for (const id of buildIds) {
-    if (!id) continue;
-    try {
-      const [jobRows] = await mySqlPool.query(
-        'SELECT jobName FROM extensions_deployment WHERE status=? and depId=?',
-        [IN_PROGRESS, id],
-      );
-      const jenkinsJobName = (jobRows as any[])?.[0]?.jobName;
-      if (!jenkinsJobName) {
-        logger.warn(
-          `syncDeploymentStatusFromJenkins: no jobName for depId=${id}`,
-        );
-        continue;
-      }
 
-      const url = `http://${config?.JENKINS_URL}/job/${jenkinsJobName}/${id}/api/json`;
+  for (const row of buildRows as any[]) {
+    const id = row?.depId;
+    const jenkinsJobName = row?.jobName;
+    if (!id || !jenkinsJobName) {
+      logger.warn(
+        `syncDeploymentStatusFromJenkins: skipping row depId=${id} jobName=${jenkinsJobName}`,
+      );
+      continue;
+    }
+
+    try {
+      const url = `${jenkinsBaseUrl()}/job/${jenkinsJobName}/${id}/api/json`;
       const response = await callApi<{ result?: string; inProgress?: boolean }>(
-        {
-          url,
-          headers: { Authorization: config?.JENKINS_AUTH ?? '' },
-        },
+        { url, headers: jenkinsAuthHeader() },
       );
 
       if (!response.success) {
         logger.warn(
-          `syncDeploymentStatusFromJenkins: Jenkins returned ${response.status} for depId=${id}`,
+          `syncDeploymentStatusFromJenkins: Jenkins ${response.status} for depId=${id}`,
         );
         continue;
       }
 
-      const buildResult = response.data?.result ?? 'UNKNOWN';
-      const buildInProgress = response.data?.inProgress ?? false;
-      if (!buildInProgress) {
+      if (!(response.data?.inProgress ?? false)) {
         await mySqlPool.query(
-          'UPDATE extensions_deployment SET status=? WHERE depId=? and jobName=?',
-          [buildResult, id, jenkinsJobName],
+          'UPDATE extensions_deployment SET status=? WHERE depId=? AND jobName=?',
+          [response.data?.result ?? 'UNKNOWN', id, jenkinsJobName],
         );
       }
     } catch (err) {
@@ -459,36 +171,384 @@ const syncDeploymentStatusFromJenkins = async (extensionList: string[]) => {
 };
 
 export const getExtensionsBuildHistory = async (orgId: number) => {
-  logger.info(`getExtensionsBuildHistory: Fetching extensions build history`);
+  logger.info(`getExtensionsBuildHistory: org ${orgId}`);
   let extensionList: string[] = [];
   try {
-    const extensionName = await fetchOrgExtensionsFromIntouch(orgId);
-    extensionList = (extensionName || [])
-      ?.map((ext: any) => ext?.packageName)
-      ?.filter((name: string | undefined): name is string => Boolean(name));
+    const orgExtensions = await fetchOrgExtensionsFromIntouch(orgId);
+    extensionList = (orgExtensions || [])
+      .map((ext: any) => ext?.packageName)
+      .filter((name: string | undefined): name is string => Boolean(name));
 
-    if (extensionList?.length === 0) {
-      return [];
-    }
+    if (extensionList.length === 0) return [];
 
     const mySqlPool = getMySQLPool();
     const [rows] = await mySqlPool.query(
-      'SELECT id,extensionName,branchOrTag,status,version,description,triggeredBy,auto_update_time FROM extensions_deployment WHERE extensionName IN (?) ORDER BY auto_update_time DESC',
+      'SELECT depId, extensionName, branchOrTag, status, version, description, triggeredBy, auto_update_time FROM extensions_deployment WHERE extensionName IN (?) ORDER BY auto_update_time DESC',
       [extensionList],
     );
     return rows;
   } catch (error) {
     logger.error(
-      `getExtensionsBuildHistory: Failed to fetch build history for orgId: ${orgId}, error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `getExtensionsBuildHistory: org ${orgId} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
     return null;
   } finally {
     if (extensionList.length > 0) {
       syncDeploymentStatusFromJenkins(extensionList).catch((e) =>
         logger.error(
-          `syncDeploymentStatusFromJenkins failed for orgId: ${orgId}, error: ${e instanceof Error ? e.message : 'Unknown error'}`,
+          `syncDeploymentStatusFromJenkins: org ${orgId} failed: ${e instanceof Error ? e.message : 'Unknown error'}`,
         ),
       );
     }
   }
+};
+
+export const getExtensionsBuildLogs = async (
+  buildId: number,
+  extensionName: string,
+) => {
+  const mySqlPool = getMySQLPool();
+  const [rows] = await mySqlPool.query(
+    'SELECT jobName FROM extensions_deployment_metadata WHERE extensionName=?',
+    [extensionName],
+  );
+  const jobName = (rows as any[])?.[0]?.jobName;
+  logger.info(`getExtensionsBuildLogs: jobName=${jobName}`);
+  const url = `${jenkinsBaseUrl()}/job/${jobName}/${buildId}/consoleText`;
+  return callApi({ url, headers: jenkinsAuthHeader() });
+};
+
+const getRepoLink = async (
+  packageName: string,
+  orgId: number,
+  userId: number,
+) => {
+  if (packageName === HEALTHCARE_FRONTEND_PACKAGE) {
+    return `https://github.com/${EXTENSIONS_REPO_OWNER}/${HEALTHCARE_FRONTEND_REPO}`;
+  }
+  const cluster = config?.CLUSTER?.toLowerCase();
+  const apitesterBase = SLAVE_APITESTER[cluster];
+  if (!apitesterBase) {
+    logger.error(
+      `getRepoLink: no SLAVE_APITESTER entry for cluster '${cluster}'`,
+    );
+    return '';
+  }
+  const response = await callApi<string>({
+    url: apitesterBase + SLAVE_EXTENSION_HELPER_PATH,
+    method: 'POST',
+    headers: { Authorization: config?.SLAVE_APITESTER_KEY },
+    body: {
+      payload: JSON.stringify({
+        orgid: String(orgId),
+        cluster,
+        executor: 'repoLink',
+        packageName,
+      }),
+      user: String(userId),
+    },
+  });
+  return response?.data ?? '';
+};
+
+const getRepoinfo = async (packageName: string) => {
+  const repo = resolveRepoName(packageName);
+  const headers = githubHeaders();
+
+  const repoResponse = await callApi<{ default_branch?: string }>({
+    url: githubRepoApi(repo),
+    headers,
+  });
+  if (!repoResponse.success) {
+    logger.error(
+      `getRepoinfo: repo ${repo} fetch failed (${repoResponse.status})`,
+    );
+    throw new Error('Error fetching repository details');
+  }
+  const defaultBranch = repoResponse.data?.default_branch;
+
+  const branchesUrl = `${githubRepoApi(repo)}/branches`;
+  const allBranchNames = new Set<string>();
+  for (let page = 1; ; page++) {
+    const branchesResponse = await callApi<Array<{ name: string }>>({
+      url: `${branchesUrl}?page=${page}&per_page=${GITHUB_BRANCHES_PER_PAGE}`,
+      headers,
+    });
+    if (!branchesResponse.success) {
+      logger.error(
+        `getRepoinfo: branches fetch failed for ${repo} (${branchesResponse.status})`,
+      );
+      break;
+    }
+    const branchesData = branchesResponse.data ?? [];
+    if (branchesData.length === 0) break;
+
+    for (const { name } of branchesData) {
+      if (!BRANCH_EXCLUDE_PREFIXES.some((p) => name.startsWith(p))) {
+        allBranchNames.add(name);
+      }
+    }
+  }
+
+  const branches: string[] = [];
+  if (defaultBranch && allBranchNames.has(defaultBranch)) {
+    branches.push(defaultBranch);
+    allBranchNames.delete(defaultBranch);
+  }
+  branches.push(...Array.from(allBranchNames).sort());
+
+  const tagsResponse = await callApi<Array<{ name: string }>>({
+    url: `${githubRepoApi(repo)}/tags`,
+    headers,
+  });
+  const tags = tagsResponse.success
+    ? (tagsResponse.data ?? [])
+        .map((t) => t?.name)
+        .filter((n): n is string => Boolean(n))
+    : [];
+
+  return { branches, tags };
+};
+
+export const getExtensionsBuildMetaData = async (
+  orgId: number,
+  userId: number,
+) => {
+  const orgExtensions = (await fetchOrgExtensionsFromIntouch(orgId)) || [];
+  return Promise.all(
+    orgExtensions.map(async (ext: any) => {
+      const packageName = ext?.packageName;
+      const [repoLink, info] = await Promise.all([
+        getRepoLink(packageName, orgId, userId).catch(() => null),
+        getRepoinfo(packageName).catch((err) => {
+          logger.error(
+            `getExtensionsBuildMetaData: getRepoinfo failed for ${packageName}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+          );
+          return { branches: [], tags: [] };
+        }),
+      ]);
+      return {
+        extensionId: ext?.extensionId,
+        packageName,
+        envType: ext?.envType,
+        version: ext?.version,
+        serviceName: ext?.serviceName,
+        url: ext?.url,
+        repoLink,
+        branches: info.branches,
+        tags: info.tags,
+      };
+    }),
+  );
+};
+
+const getJenkinsCrumb = async () => {
+  const auth = jenkinsBasicAuth();
+  const response = await callApi<{
+    crumb: string;
+    crumbRequestField: string;
+  }>({
+    url: `${jenkinsBaseUrl()}/crumbIssuer/api/json`,
+    headers: { Authorization: auth },
+  });
+  if (!response.success) {
+    throw new Error(`Failed to get Jenkins crumb: ${response.status}`);
+  }
+  return {
+    crumb: response.data.crumb,
+    crumbField: response.data.crumbRequestField,
+    auth,
+  };
+};
+
+const createJenkinsJob = async (jobName: string, jobConfigXml: string) => {
+  const { crumb, crumbField, auth } = await getJenkinsCrumb();
+  return fetch(
+    `${jenkinsBaseUrl()}/createItem?name=${encodeURIComponent(jobName)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/xml',
+        Authorization: auth,
+        [crumbField]: crumb,
+      },
+      body: jobConfigXml,
+    },
+  );
+};
+
+const fetchVersionFromBranch = async (
+  githubUrl: string,
+  branchOrTag: string,
+) => {
+  const parsed = parseGithubRepo(githubUrl);
+  if (!parsed) return null;
+  const { owner, repo } = parsed;
+  const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/contents/package.json?ref=${encodeURIComponent(branchOrTag)}`;
+  try {
+    const response = await callApi<{ content?: string }>({
+      url,
+      headers: githubHeaders(),
+    });
+    if (!response.success || !response.data?.content) {
+      logger.warn(
+        `fetchVersionFromBranch: github ${response.status} for ${owner}/${repo}@${branchOrTag}`,
+      );
+      return null;
+    }
+    const decoded = Buffer.from(response.data.content, 'base64').toString(
+      'utf-8',
+    );
+    return JSON.parse(decoded).version ?? null;
+  } catch (err) {
+    logger.error(
+      `fetchVersionFromBranch: failed for ${owner}/${repo}@${branchOrTag}: ${err instanceof Error ? err.message : 'Unknown error'}`,
+    );
+    return null;
+  }
+};
+
+const ensureJenkinsJob = async (
+  extensionName: string,
+  tempExtName: string,
+  gitRepo: string,
+  username: string,
+) => {
+  const mySqlPool = getMySQLPool();
+  const [metaRows] = await mySqlPool.query(
+    'SELECT 1 FROM extensions_deployment_metadata WHERE extensionName=?',
+    [extensionName],
+  );
+  if ((metaRows as any[]).length > 0) return;
+
+  const xml = buildExtensionJobConfigXml(extensionName, tempExtName);
+  const createResp = await createJenkinsJob(tempExtName, xml);
+  if (createResp.status !== 200) {
+    logger.error(
+      `ensureJenkinsJob: create failed status=${createResp.status} for ${extensionName}`,
+    );
+    throw new Error('Failed to create Jenkins job, please try after sometime.');
+  }
+  logger.info(`ensureJenkinsJob: created job ${tempExtName}`);
+  await mySqlPool.query(
+    'INSERT INTO extensions_deployment_metadata (extensionName, git_repo, jobName, triggeredBy, clusters) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE git_repo=?',
+    [extensionName, gitRepo, tempExtName, username, '', gitRepo],
+  );
+};
+
+const triggerJenkinsBuild = async (
+  jobName: string,
+  branchOrTag: string,
+  gitRepo: string,
+) => {
+  const params = new URLSearchParams({
+    BRANCH_NAME: branchOrTag,
+    RESULT_CLUSTER: config.CLUSTER,
+    REPO_URL: gitRepo,
+  });
+  const url = `${jenkinsBaseUrl()}/job/${jobName}/buildWithParameters?${params.toString()}`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: jenkinsAuthHeader(),
+  });
+  if (resp.status !== 201) {
+    logger.error(
+      `triggerJenkinsBuild: status=${resp.status} for job ${jobName}`,
+    );
+    throw new Error('Failed to trigger build, please try after sometime.');
+  }
+  const location = resp.headers.get('location');
+  if (!location) {
+    throw new Error('Jenkins did not return a queue location header.');
+  }
+  return location;
+};
+
+const pollQueuedBuildId = async (locationUrl: string) => {
+  const statusUrl = `${locationUrl.replace(/\/$/, '')}/api/json`;
+  for (let attempt = 1; attempt <= BUILD_POLL_MAX_RETRIES; attempt++) {
+    await new Promise((r) => setTimeout(r, BUILD_POLL_INTERVAL_MS));
+    const resp = await callApi<{
+      why?: string | null;
+      executable?: { number: number };
+    }>({ url: statusUrl, headers: jenkinsAuthHeader() });
+
+    if (!resp.success) {
+      logger.warn(
+        `pollQueuedBuildId: attempt ${attempt}/${BUILD_POLL_MAX_RETRIES} status=${resp.status}`,
+      );
+      continue;
+    }
+    if (resp.data?.why == null && resp.data?.executable) {
+      return resp.data.executable.number;
+    }
+    logger.info(
+      `pollQueuedBuildId: attempt ${attempt}/${BUILD_POLL_MAX_RETRIES} still queued`,
+    );
+  }
+  throw new Error('Failed to fetch build status, max retry exceeded.');
+};
+
+export const extensionsTriggerBuild = async (
+  orgId: number,
+  userId: number,
+  gitMetaData: ExtensionGitMetaData,
+): Promise<ExtensionBuildRecord> => {
+  const {
+    description,
+    extensionName,
+    githubUrl,
+    branchOrTag,
+    username = String(userId),
+  } = gitMetaData ?? ({} as ExtensionGitMetaData);
+
+  if (!extensionName || !githubUrl || !branchOrTag) {
+    throw new Error(
+      'extensionsTriggerBuild: extensionName, githubUrl and branchOrTag are required',
+    );
+  }
+
+  const tempExtName = stripPackagePrefix(extensionName);
+  const gitRepo = `${githubUrl}.git`;
+
+  const version = await fetchVersionFromBranch(githubUrl, branchOrTag);
+  await ensureJenkinsJob(extensionName, tempExtName, gitRepo, username);
+  const locationUrl = await triggerJenkinsBuild(
+    tempExtName,
+    branchOrTag,
+    gitRepo,
+  );
+  const buildId = await pollQueuedBuildId(locationUrl);
+
+  const newBuild: ExtensionBuildRecord = {
+    id: buildId,
+    extensionName,
+    branchOrTag,
+    status: IN_PROGRESS,
+    version,
+    description,
+    triggeredBy: username,
+    timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    logs: '',
+  };
+
+  const mySqlPool = getMySQLPool();
+  await mySqlPool.query(
+    'INSERT INTO extensions_deployment (triggeredBy, orgId, depId, description, status, jobName, extensionName, branchOrTag, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      username,
+      orgId,
+      buildId,
+      description,
+      IN_PROGRESS,
+      tempExtName,
+      extensionName,
+      branchOrTag,
+      version,
+    ],
+  );
+  logger.info(
+    `extensionsTriggerBuild: build triggered ${JSON.stringify(newBuild)}`,
+  );
+  return newBuild;
 };
