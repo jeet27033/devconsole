@@ -15,4 +15,44 @@ const makeSelectFetchingBuildHistory = () =>
     substate.get('fetchingBuildHistory'),
   );
 
-export { makeSelectBuildHistory, makeSelectFetchingBuildHistory };
+const makeSelectBuildLogs = () =>
+  createSelector(selectExtensionsDeploymentDomain, substate =>
+    substate.get('buildLogs') || '',
+  );
+
+const makeSelectFetchingBuildLogs = () =>
+  createSelector(selectExtensionsDeploymentDomain, substate =>
+    substate.get('fetchingBuildLogs'),
+  );
+
+const makeSelectBuildMeta = () =>
+  createSelector(selectExtensionsDeploymentDomain, substate =>
+    (substate.get('buildMeta') || fromJS([])).toJS(),
+  );
+
+const makeSelectFetchingBuildMeta = () =>
+  createSelector(selectExtensionsDeploymentDomain, substate =>
+    substate.get('fetchingBuildMeta'),
+  );
+
+const makeSelectTriggerBuildResult = () =>
+  createSelector(selectExtensionsDeploymentDomain, substate => {
+    const result = substate.get('triggerBuildResult');
+    return result && result.toJS ? result.toJS() : result;
+  });
+
+const makeSelectTriggeringBuild = () =>
+  createSelector(selectExtensionsDeploymentDomain, substate =>
+    substate.get('triggeringBuild'),
+  );
+
+export {
+  makeSelectBuildHistory,
+  makeSelectFetchingBuildHistory,
+  makeSelectBuildLogs,
+  makeSelectFetchingBuildLogs,
+  makeSelectBuildMeta,
+  makeSelectFetchingBuildMeta,
+  makeSelectTriggerBuildResult,
+  makeSelectTriggeringBuild,
+};

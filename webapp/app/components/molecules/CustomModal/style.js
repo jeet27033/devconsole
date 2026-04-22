@@ -83,4 +83,22 @@ export const CustomModalGlobalStyles = createGlobalStyle`
     background: #1e1e1e;
     font-size: ${FONT_SIZE_S};
   }
+
+  /* Logs Modal size constraints */
+  .custom-modal-wrap .logsModal {
+    top: ${CAP_SPACE_24};
+    padding-bottom: ${CAP_SPACE_24};
+    max-height: calc(100vh - ${CAP_SPACE_24} * 2);
+  }
+
+  .custom-modal-wrap .logsModal .ant-modal-content {
+    max-height: calc(100vh - ${CAP_SPACE_24} * 2);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .custom-modal-wrap .logsModal .ant-modal-body {
+    overflow: auto;
+    flex: 1 1 auto;
+  }
 `;

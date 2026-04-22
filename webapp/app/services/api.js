@@ -95,3 +95,18 @@ export const getExtensionsBuildHistory = async ()=> {
   const url = `${endpoints.devconsole_endpoint}/extensions/build-history`;
   return httpRequest(url, getVulcanAPICallObject('GET'));
 };
+
+export const getExtensionsBuildLogs = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/build-logs`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const getExtensionsBuildMeta = async () => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/build-meta`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const triggerExtensionsBuild = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/build-trigger`;
+  return httpRequest(url, getVulcanAPICallObject('GET', body));
+};
