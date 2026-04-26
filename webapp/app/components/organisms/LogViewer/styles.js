@@ -42,11 +42,11 @@ export default css`
   }
 
   .form-field .extension-select {
-    min-width: 12rem;
+    min-width: 20rem;
   }
 
   .form-field .limit-input {
-    width: 8rem;
+    width: 9rem;
   }
 
   .search-section {
@@ -89,7 +89,7 @@ export default css`
   }
 
   .search-term-row .operator-select {
-    width: 7rem !important;
+    width: 10rem !important;
   }
 
   .search-hint {
@@ -222,5 +222,31 @@ export default css`
     min-height: 12.5rem;
     color: ${FONT_COLOR_02};
     font-size: ${FONT_SIZE_M};
+  }
+
+  .logs-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 25rem;
+    background: ${CAP_WHITE};
+    border: 0.0625rem solid ${CAP_G20};
+    border-radius: 0.375rem;
+    margin-top: ${CAP_SPACE_16};
+  }
+
+  .logs-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 12.5rem;
+    margin-top: ${CAP_SPACE_16};
+    padding: ${CAP_SPACE_16};
+    background: ${CAP_WHITE};
+    border: 0.0625rem solid ${CAP_G20};
+    border-radius: 0.375rem;
+    color: #b00020;
+    font-size: ${FONT_SIZE_M};
+    text-align: center;
   }
 `;

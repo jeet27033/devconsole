@@ -110,3 +110,13 @@ export const triggerExtensionsBuild = async (body) => {
   const url = `${endpoints.devconsole_endpoint}/extensions/build-trigger`;
   return httpRequest(url, getVulcanAPICallObject('GET', body));
 };
+
+export const fetchLokiLogs = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/log-viewer`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const getExtensionsList = async () => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/get-extensions`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};

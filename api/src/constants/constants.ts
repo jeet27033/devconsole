@@ -50,6 +50,10 @@ export const ORG_EXTENSIONS_GROUPINGS_PATH =
 export const VERSION_WITH_ENDPOINTS_PATH =
   '/arya/api/v1/org-settings/avengers-metadata-v2/v2/extensions/versionWithEndpoints';
 export const SLAVE_EXTENSION_HELPER_PATH = 'apitest_app/slaveExtensionHelper';
+export const LOKI_DEFAULT_LIMIT = 1000;
+export const LOKI_MAX_LIMIT = 5000;
+export const DEFAULT_USER_TIMEZONE = 'Asia/Kolkata';
+export const LOKI_TIMESTAMP_NS_DIGITS = 19;
 
 export const SLAVE_APITESTER: any = {
   'devenv-crm': 'https://apitester.devenv-crm.cc.capillarytech.com/',
@@ -246,3 +250,100 @@ done
   </builders>
   <publishers/>
 </project>`;
+
+export const GRAFANA_APP_NAME_FOR_EXTENSION = {
+  'neo-a': 'neo-a',
+  'vulcan.node.api': 'vulcan-api-a',
+  //'Connect+': 'glue-jsvt-a',
+  //'Connect Plus': 'cp-nifi',
+  'cp-nifi': 'cp-nifi', // C+
+  'glue-jsvt-a': 'glue-jsvt-a', // C+ (legacy)
+  'Extension Gateway': 'api-gateway-ext',
+} as any;
+
+const BASE_APP_CONFIG = {
+  app_names: null,
+  use_regex: false,
+  org_filter_format: '',
+  new_newlog: false,
+};
+
+export const LOKI_QUERY_CONFIG = {
+  capillary_extension_pattern: '@capillarytech',
+
+  app_configs: {
+    'neo-a': {
+      ...BASE_APP_CONFIG,
+      app_names: ['neo-a', 'neo-events'],
+      use_regex: true,
+      org_filter_format: '"orgId":{orgId}',
+      new_newlog: true,
+    },
+
+    'vulcan-api-a': {
+      ...BASE_APP_CONFIG,
+      app_names: ['vulcan-api-a'],
+      org_filter_format: '"orgId":{orgId}',
+      new_newlog: true,
+    },
+
+    'api-gateway-a': {
+      ...BASE_APP_CONFIG,
+      app_names: ['api-gateway-a'],
+    },
+
+    'sol-api-gateway-a': {
+      ...BASE_APP_CONFIG,
+      app_names: ['sol-api-gateway-a'],
+    },
+
+    'intouch-api-a': {
+      ...BASE_APP_CONFIG,
+      app_names: ['intouch-api-a'],
+    },
+
+    'intouch-api-v3-jsvt': {
+      ...BASE_APP_CONFIG,
+      app_names: ['intouch-api-v3-jsvt'],
+    },
+
+    'glue-jsvt-a': {
+      ...BASE_APP_CONFIG,
+      app_names: ['glue-jsvt-a'],
+      org_filter_format: '{orgId}',
+    },
+
+    'cp-nifi': {
+      ...BASE_APP_CONFIG,
+      app_names: ['cp-nifi'],
+    },
+
+    'api-gateway-ext': {
+      ...BASE_APP_CONFIG,
+      app_names: ['api-gateway-ext'],
+      org_filter_format: '{orgId}',
+    },
+
+    c_plus_rt_metrics: {
+      ...BASE_APP_CONFIG,
+      app_names: ['neo-a', 'neo-events', 'glue-jsvt-a'],
+      use_regex: true,
+      org_filter_format: '[{orgId}]',
+    },
+
+    cortex_metrics: {
+      ...BASE_APP_CONFIG,
+      app_names: ['cortex-a'],
+      use_regex: true,
+      org_filter_format: '{orgId}',
+      skip_extension_in_search: true,
+    },
+  },
+
+  default_config: {
+    app_names: null,
+    use_regex: false,
+    org_filter_format: '[{orgId}]',
+    new_newlog: false,
+  },
+};

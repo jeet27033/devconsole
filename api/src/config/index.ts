@@ -27,6 +27,7 @@ const config = {
   JENKINS_API_TOKEN: process.env.JENKINS_API_TOKEN || '',
   SLAVE_APITESTER_KEY: process.env.SLAVE_APITESTER_KEY || '',
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+  LOKI_URL: process.env.LOKI_URL || '',
 };
 
 export default config;

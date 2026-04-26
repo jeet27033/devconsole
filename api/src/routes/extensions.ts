@@ -1,19 +1,23 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Arya from '@capillarytech/arya';
-import { authenticateMiddleware, validate } from '../middlewares';
 import {
-  SuccessResponse,
-  ErrorResponse,
-} from '../helpers/responseHandler';
+  authenticateMiddleware,
+  validate,
+  authenticateMiddlewareWithProxy,
+} from '../middlewares';
+import { SuccessResponse, ErrorResponse } from '../helpers/responseHandler';
 import {
   getExtensionsBuildHistory,
   getExtensionsBuildLogs,
   getExtensionsBuildMetaData,
-  extensionsTriggerBuild
+  extensionsTriggerBuild,
+  getExtensionLists,
+  fetchLokiLogs,
 } from '../services/extensions';
 import {
   buildLogsBodySchema,
   triggerBuildBodySchema,
+  lokiLogsBodySchema,
 } from '../joiSchema/extensions';
 import { v4 as uuidv4 } from 'uuid';
 import { errorMsg } from '../constants/error-msg';
@@ -34,10 +38,10 @@ export default (app: Router) => {
 
   route.get(
     '/build-history',
-    authenticateMiddleware(),
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
-        const { orgId } = req as any;
+        const orgId = req.headers['x-cap-api-auth-org-id'] as any;
         const response = await getExtensionsBuildHistory(orgId);
         return SuccessResponse(res, response, 200);
       } catch (e) {
@@ -49,7 +53,7 @@ export default (app: Router) => {
 
   route.post(
     '/build-logs',
-    authenticateMiddleware(),
+    //authenticateMiddleware(),
     validate(buildLogsBodySchema),
     async (req: Request, res: Response) => {
       try {
@@ -65,10 +69,11 @@ export default (app: Router) => {
 
   route.get(
     '/build-meta',
-    authenticateMiddleware(),
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
-        const { orgId , userId } = req as any;
+        const orgId = req.headers['x-cap-api-auth-org-id'] as any;
+        const userId = req.headers['x-cap-remote-user'] as any;
         const response = await getExtensionsBuildMetaData(orgId, userId);
         return SuccessResponse(res, response, 200);
       } catch (e) {
@@ -78,18 +83,73 @@ export default (app: Router) => {
     },
   );
 
-    route.get(
+  route.get(
     '/build-trigger',
-    authenticateMiddleware(),
+    //authenticateMiddleware(),
     validate(triggerBuildBodySchema),
     async (req: Request, res: Response) => {
       try {
-        const { orgId , userId } = req as any;
+        const orgId = req.headers['x-cap-api-auth-org-id'] as any;
+        const userId = req.headers['x-cap-remote-user'] as any;
         const body = req.body;
-        const response = await extensionsTriggerBuild(orgId, userId , body);
+        const response = await extensionsTriggerBuild(orgId, userId, body);
         return SuccessResponse(res, response, 200);
       } catch (e) {
         logger.error('Error fetching homepage metrics', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
+
+  route.get(
+    '/get-extensions',
+    //authenticateMiddleware(),
+    async (req: Request, res: Response) => {
+      try {
+        const orgId = req.headers['x-cap-api-auth-org-id'] as any;
+        const response = await getExtensionLists(orgId);
+        return SuccessResponse(res, response, 200);
+      } catch (e) {
+        logger.error('Error fetching homepage metrics', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
+  route.post(
+    '/log-viewer',
+    //authenticateMiddleware(),
+    validate(lokiLogsBodySchema),
+    async (req: Request, res: Response) => {
+      try {
+        const orgId = req.headers['x-cap-api-auth-org-id'] as any;
+        const {
+          appName,
+          extension = '',
+          search = '',
+          startTime,
+          endTime,
+          isFullLogsChecked = false,
+          type = 'app',
+          newRelicAppName = null,
+          userTimezone,
+        } = req.body;
+        const response = await fetchLokiLogs(
+          Number(orgId),
+          appName,
+          extension,
+          search,
+          Number(startTime),
+          Number(endTime),
+          Boolean(isFullLogsChecked),
+          type,
+          newRelicAppName,
+          userTimezone,
+        );
+        return SuccessResponse(res, response, 200);
+      } catch (e) {
+        logger.error('Error fetching loki logs', e);
         return ErrorResponse(res, e);
       }
     },
