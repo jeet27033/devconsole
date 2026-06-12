@@ -120,3 +120,13 @@ export const getExtensionsList = async () => {
   const url = `${endpoints.devconsole_endpoint}/extensions/get-extensions`;
   return httpRequest(url, getVulcanAPICallObject('GET'));
 };
+
+export const getConfigData = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/config/get`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const saveConfigRequest = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/config/save`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};

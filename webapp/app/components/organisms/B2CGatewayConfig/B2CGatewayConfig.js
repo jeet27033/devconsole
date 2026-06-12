@@ -9,9 +9,9 @@ import {
   CapButton,
   CapHeading,
 } from '@capillarytech/cap-ui-library';
-import CapModal from '@capillarytech/cap-ui-library/CapModal';
 import CapTooltipWithInfo from '@capillarytech/cap-ui-library/CapTooltipWithInfo';
 
+import CustomModal from '../../molecules/CustomModal';
 import styles from './styles';
 import messages from './messages';
 import {
@@ -224,7 +224,7 @@ const B2CGatewayConfig = ({ className, intl: { formatMessage } }) => {
         </div>
 
         {/* Add Key-Secret Modal */}
-        <CapModal
+        <CustomModal
           title={formatMessage(messages.addClientKeySecret)}
           visible={addKeyModalVisible}
           onOk={handleAddKey}
@@ -266,10 +266,10 @@ const B2CGatewayConfig = ({ className, intl: { formatMessage } }) => {
               />
             </div>
           </div>
-        </CapModal>
+        </CustomModal>
 
         {/* Add Whitelisted API Modal */}
-        <CapModal
+        <CustomModal
           title={formatMessage(messages.addWhitelistedApi)}
           visible={addApiModalVisible}
           onOk={handleAddApi}
@@ -311,10 +311,10 @@ const B2CGatewayConfig = ({ className, intl: { formatMessage } }) => {
               />
             </div>
           </div>
-        </CapModal>
+        </CustomModal>
 
         {/* Migration Requests Modal */}
-        <CapModal
+        <CustomModal
           title={formatMessage(messages.migrationRequests)}
           visible={migrationRequestsVisible}
           onCancel={() => setMigrationRequestsVisible(false)}
@@ -328,10 +328,10 @@ const B2CGatewayConfig = ({ className, intl: { formatMessage } }) => {
               emptyMessage="No migration requests found."
             />
           </div>
-        </CapModal>
+        </CustomModal>
 
         {/* API Requests Modal */}
-        <CapModal
+        <CustomModal
           title={formatMessage(messages.apiRequests)}
           visible={apiRequestsVisible}
           onCancel={() => setApiRequestsVisible(false)}
@@ -345,7 +345,7 @@ const B2CGatewayConfig = ({ className, intl: { formatMessage } }) => {
               emptyMessage="No API requests found."
             />
           </div>
-        </CapModal>
+        </CustomModal>
       </CapColumn>
     </CapRow>
   );

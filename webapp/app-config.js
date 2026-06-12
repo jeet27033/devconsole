@@ -2,7 +2,7 @@ module.exports = {
   "appName": "devconsole",
   "appId": "bf8d8ccc13a045410c609308",
   "intouchBaseUrl": "nightly.intouch.capillarytech.com",
-  "prefix": "/devconsole",
+  "prefix": "/devconsole/ui",
   "isHostedOnPlatform": true,
   "appType": "native",
   "bugsnag": {

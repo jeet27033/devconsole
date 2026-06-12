@@ -28,6 +28,7 @@ const config = {
   SLAVE_APITESTER_KEY: process.env.SLAVE_APITESTER_KEY || '',
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
   LOKI_URL: process.env.LOKI_URL || '',
+  MASTER_APITESTER: process.env.MASTER_APITESTER || '',
 };
 
 export default config;

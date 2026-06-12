@@ -9,9 +9,9 @@ import {
   CapButton,
 } from '@capillarytech/cap-ui-library';
 import CapSpin from '@capillarytech/cap-ui-library/CapSpin';
-import CapModal from '@capillarytech/cap-ui-library/CapModal';
 import CapIcon from '@capillarytech/cap-ui-library/CapIcon';
 
+import CustomModal from '../../molecules/CustomModal';
 import DateAndTimePicker from '../../molecules/DateAndTimePicker';
 import styles from './styles';
 import messages from './messages';
@@ -282,7 +282,7 @@ const NewRelicIssues = ({ className, intl: { formatMessage } }) => {
         )}
 
         {/* Close Issue Confirmation Modal */}
-        <CapModal
+        <CustomModal
           title={formatMessage(messages.closeIssueTitle)}
           visible={closeModalVisible}
           onOk={handleConfirmClose}
@@ -295,7 +295,7 @@ const NewRelicIssues = ({ className, intl: { formatMessage } }) => {
         >
           <p>{formatMessage(messages.closeIssueConfirm)}</p>
           <p>{formatMessage(messages.areYouSure)}</p>
-        </CapModal>
+        </CustomModal>
       </CapColumn>
     </CapRow>
   );

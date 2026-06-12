@@ -10,9 +10,9 @@ import {
   CapHeading,
 } from '@capillarytech/cap-ui-library';
 import CapSpin from '@capillarytech/cap-ui-library/CapSpin';
-import CapModal from '@capillarytech/cap-ui-library/CapModal';
 import CapIcon from '@capillarytech/cap-ui-library/CapIcon';
 
+import CustomModal from '../../molecules/CustomModal';
 import styles from './styles';
 import messages from './messages';
 import {
@@ -643,7 +643,7 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
         )}
 
         {/* Settings Modal */}
-        <CapModal
+        <CustomModal
           title={formatMessage(messages.settings)}
           visible={settingsVisible}
           onOk={handleSaveSettings}
@@ -659,7 +659,7 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
               placeholder="https://hooks.slack.com/services/..."
             />
           </div>
-        </CapModal>
+        </CustomModal>
       </CapColumn>
     </CapRow>
   );
