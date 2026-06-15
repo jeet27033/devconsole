@@ -4,7 +4,7 @@ import { callApi } from '../helpers/apiCaller';
 import {
   determineRequestType,
   buildExtensionFilter,
-  getAppConfig,
+  getAppConfig as getLokiAppConfig,
   buildOrgFilter,
   parseSearchInput,
   buildLokiQuery,
@@ -36,6 +36,7 @@ import {
   DEFAULT_USER_TIMEZONE,
   buildExtensionJobConfigXml,
   GRAFANA_APP_NAME_FOR_EXTENSION,
+  getNewRelicAppConfigs,
 } from '../constants/constants';
 import {
   ExtensionGitMetaData,
@@ -567,6 +568,7 @@ export const extensionsTriggerBuild = async (
   return newBuild;
 };
 
+
 export const getExtensionLists = async (orgId: number) => {
   const extensions = await fetchOrgExtensionsFromIntouch(orgId);
   for (const ext of extensions || []) {
@@ -574,6 +576,20 @@ export const getExtensionLists = async (orgId: number) => {
   }
   return GRAFANA_APP_NAME_FOR_EXTENSION;
 };
+
+export const getAppConfig = (appName: string, orgId: number, cluster: string) => {
+  const { appConfigs, defaultConfig } = getNewRelicAppConfigs(appName, orgId, cluster);
+  const normalizedAppName = appName.toLowerCase();
+  const clusterPrefix = cluster.toLowerCase();
+  const matchedKey = Object.keys(appConfigs).find((key) => {
+    const stripped = key.toLowerCase()
+      .replace(`${clusterPrefix}.`, '')
+      .replace(`${clusterPrefix}-`, '');
+    return normalizedAppName.startsWith(stripped) || stripped.startsWith(normalizedAppName);
+  });
+  return (matchedKey ? appConfigs[matchedKey] : null) ?? defaultConfig;
+}
+
 
 export const fetchLokiLogs = async (
   orgId: number,
@@ -611,7 +627,7 @@ export const fetchLokiLogs = async (
       ? buildExtensionFilter(extension)
       : buildOrgFilter(orgId, appName);
 
-  const app_config = getAppConfig(appName);
+  const app_config = getLokiAppConfig(appName);
   const new_newlog: boolean = Boolean(app_config.new_newlog);
 
   logger.info(`Limit at backend side: ${LOKI_DEFAULT_LIMIT}`);

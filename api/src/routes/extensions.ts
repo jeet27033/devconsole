@@ -13,6 +13,7 @@ import {
   extensionsTriggerBuild,
   getExtensionLists,
   fetchLokiLogs,
+  getAppConfig
 } from '../services/extensions';
 import {
   buildLogsBodySchema,
@@ -21,6 +22,7 @@ import {
 } from '../joiSchema/extensions';
 import { v4 as uuidv4 } from 'uuid';
 import { errorMsg } from '../constants/error-msg';
+import config from '../config';
 
 const logger = Arya.Logger.getLogger('devconsole-api');
 const route = Router();
@@ -116,6 +118,22 @@ export default (app: Router) => {
       }
     },
   );
+
+  route.get(
+    '/get-fields',
+    //authenticateMiddleware(),
+    async (req: Request, res: Response) => {
+      try {
+        const orgId = req.headers['x-cap-api-auth-org-id'] as any;
+        const { appName } = req.query as any; 
+        const response = await getAppConfig(appName, orgId, config.CLUSTER);
+        return SuccessResponse(res, response, 200);
+      }catch (e) {
+        logger.error('Error fetching homepage metrics', e);
+        return ErrorResponse(res, e);
+      }
+    }
+  )
 
   route.post(
     '/log-viewer',

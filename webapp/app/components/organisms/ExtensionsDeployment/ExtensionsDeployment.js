@@ -18,6 +18,7 @@ import {
   CapSelect,
   CapSwitch,
 } from '@capillarytech/cap-ui-library';
+import CapSpin from '@capillarytech/cap-ui-library/CapSpin';
 import CapHeading from '@capillarytech/cap-ui-library/CapHeading';
 import { withRouter } from 'react-router';
 import { injectIntl } from 'react-intl';
@@ -329,82 +330,83 @@ const ExtensionsDeployment = ({
             </CapButton>,
           ]}
         >
-          <CapRow
-            className="deployModalFormItem"
-            style={{ 'padding-bottom': '3%' }}
-          >
-            <CapHeading className="deployModalFormLabel" type="h4">
-              {formatMessage(messages.extensionList)}
-            </CapHeading>
-            <CapSelect
-              style={{ width: '100%' }}
-              placeholder={formatMessage(messages.selectExtension)}
-              options={extensionOptions}
-              loading={fetchingBuildMeta === REQUEST}
-              value={selectedExtension || undefined}
-              onChange={handleExtensionChange}
-            />
-          </CapRow>
-          <CapRow
-            className="deployModalFormItem"
-            style={{ 'padding-bottom': '3%' }}
-          >
-            <CapHeading className="deployModalFormLabel" type="h4">
-              {formatMessage(messages.githubUrl)}
-            </CapHeading>
-            <CapInput
-              placeholder={formatMessage(messages.githubUrlPlaceholder)}
-              value={stripGitSuffix(selectedExtensionMeta?.repoLink || '')}
-              disabled
-            />
-          </CapRow>
-          <CapRow
-            className="deployModalFormItem"
-            style={{ 'padding-bottom': '3%' }}
-          >
-            <CapHeading
-              className="deployModalFormLabel"
-              type="h4"
-              style={{ 'padding-bottom': '1%' }}
-            >
-              {formatMessage(messages.branchesOrTags)}
-            </CapHeading>
+          <CapSpin spinning={fetchingBuildMeta === REQUEST}>
             <CapRow
-              className="deployModalSwitchRow"
-              type="flex"
-              align="middle"
-              style={{ 'padding-bottom': '1%' }}
+              className="deployModalFormItem"
+              style={{ 'padding-bottom': '3%' }}
             >
-              <span>{formatMessage(messages.tags)}</span>
-              <CapSwitch
-                checked={useBranches}
-                onChange={handleBranchOrTagToggle}
-                style={{ 'margin-left': '2%', 'margin-right': '2%' }}
+              <CapHeading className="deployModalFormLabel" type="h4">
+                {formatMessage(messages.extensionList)}
+              </CapHeading>
+              <CapSelect
+                style={{ width: '100%' }}
+                placeholder={formatMessage(messages.selectExtension)}
+                options={extensionOptions}
+                value={selectedExtension || undefined}
+                onChange={handleExtensionChange}
               />
-              <span>{formatMessage(messages.branches)}</span>
             </CapRow>
-            <CapSelect
-              style={{ width: '100%' }}
-              placeholder={formatMessage(messages.selectBranchOrTag)}
-              options={useBranches ? branchOptions : tagOptions}
-              value={selectedBranchOrTag || undefined}
-              onChange={setSelectedBranchOrTag}
-              disabled={!selectedExtension}
-            />
-          </CapRow>
-          <CapRow
-            className="deployModalFormItem"
-            style={{ 'padding-bottom': '3%' }}
-          >
-            <CapHeading className="deployModalFormLabel" type="h4">
-              {formatMessage(messages.buildDescription)}
-            </CapHeading>
-            <CapInput
-              placeholder={formatMessage(messages.buildDescriptionPlaceholder)}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </CapRow>
+            <CapRow
+              className="deployModalFormItem"
+              style={{ 'padding-bottom': '3%' }}
+            >
+              <CapHeading className="deployModalFormLabel" type="h4">
+                {formatMessage(messages.githubUrl)}
+              </CapHeading>
+              <CapInput
+                placeholder={formatMessage(messages.githubUrlPlaceholder)}
+                value={stripGitSuffix(selectedExtensionMeta?.repoLink || '')}
+                disabled
+              />
+            </CapRow>
+            <CapRow
+              className="deployModalFormItem"
+              style={{ 'padding-bottom': '3%' }}
+            >
+              <CapHeading
+                className="deployModalFormLabel"
+                type="h4"
+                style={{ 'padding-bottom': '1%' }}
+              >
+                {formatMessage(messages.branchesOrTags)}
+              </CapHeading>
+              <CapRow
+                className="deployModalSwitchRow"
+                type="flex"
+                align="middle"
+                style={{ 'padding-bottom': '1%' }}
+              >
+                <span>{formatMessage(messages.tags)}</span>
+                <CapSwitch
+                  checked={useBranches}
+                  onChange={handleBranchOrTagToggle}
+                  style={{ 'margin-left': '2%', 'margin-right': '2%' }}
+                />
+                <span>{formatMessage(messages.branches)}</span>
+              </CapRow>
+              <CapSelect
+                style={{ width: '100%' }}
+                placeholder={formatMessage(messages.selectBranchOrTag)}
+                options={useBranches ? branchOptions : tagOptions}
+                value={selectedBranchOrTag || undefined}
+                onChange={setSelectedBranchOrTag}
+                disabled={!selectedExtension}
+              />
+            </CapRow>
+            <CapRow
+              className="deployModalFormItem"
+              style={{ 'padding-bottom': '3%' }}
+            >
+              <CapHeading className="deployModalFormLabel" type="h4">
+                {formatMessage(messages.buildDescription)}
+              </CapHeading>
+              <CapInput
+                placeholder={formatMessage(messages.buildDescriptionPlaceholder)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </CapRow>
+          </CapSpin>
         </CustomModal>
 
         {/* Build Logs Modal */}

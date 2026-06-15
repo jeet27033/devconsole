@@ -20,6 +20,7 @@ import CapSpin from '@capillarytech/cap-ui-library/CapSpin';
 import CapIcon from '@capillarytech/cap-ui-library/CapIcon';
 
 import DateAndTimePicker from '../../molecules/DateAndTimePicker';
+import { getDefaultDateRange } from '../../../helper/dateHelper';
 import { REQUEST } from '../../pages/App/constants';
 import styles from './styles';
 import messages from './messages';
@@ -41,13 +42,6 @@ import {
   makeSelectLogsError,
 } from './selectors';
 
-const getDefaultDateRange = () => {
-  const endDate = new Date();
-  const startDate = new Date(endDate);
-  startDate.setDate(startDate.getDate() - 30);
-  return { startDate, endDate };
-};
-
 const LogViewer = ({
   className,
   intl: { formatMessage },
@@ -67,7 +61,7 @@ const LogViewer = ({
 
   const extensionOptions = useMemo(
     () =>
-      Object.keys(extensionsMap || {}).map((ext) => ({
+      Object.keys(extensionsMap || {})?.map((ext) => ({
         key: ext,
         value: ext,
         label: ext,
@@ -87,12 +81,12 @@ const LogViewer = ({
   }, []);
 
   const handleRemoveSearchTerm = useCallback((index) => {
-    setSearchTerms((prev) => prev.filter((_, i) => i !== index));
+    setSearchTerms((prev) => prev?.filter((_, i) => i !== index));
   }, []);
 
   const handleSearchTermChange = useCallback((index, field, value) => {
     setSearchTerms((prev) =>
-      prev.map((t, i) => (i === index ? { ...t, [field]: value } : t)),
+      prev?.map((t, i) => (i === index ? { ...t, [field]: value } : t)),
     );
   }, []);
 

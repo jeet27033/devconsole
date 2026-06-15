@@ -347,3 +347,106 @@ export const LOKI_QUERY_CONFIG = {
     new_newlog: false,
   },
 };
+
+export const getNewRelicAppConfigs = (appName: string, orgId: number, cluster: string) => ({
+  appConfigs: {
+    [`${cluster}.Neo`]: {
+      base_where_clause: `WHERE appName = '${appName}'`,
+      org_filter: `AND response.headers.xCapApiAuthOrgId = '${orgId}'`,
+      default_since_until: "SINCE 8 days ago UNTIL NOW",
+      field_metadata: {
+        "response.headers.xCapRequestId": { is_request_id: true, preselect: true },
+        "http.statusCode": { newrelic_type: "string", preselect: true },
+        "request.uri": { preselect: true },
+        "request.method": { preselect: true }
+      }
+    },
+    [`${cluster}.vulcan.node.api`]: {
+      base_where_clause: `WHERE appName = '${appName}'`,
+      org_filter: `AND response.headers.xCapApiAuthOrgId = '${orgId}'`,
+      default_since_until: "SINCE 1 day ago UNTIL NOW",
+      field_metadata: {
+        "request.headers.xCapRequestId": { is_request_id: true, preselect: true },
+        "response.headers.xCapVulcanAppName": { preselect: true },
+        "http.statusCode": { newrelic_type: "string", preselect: true },
+        "request.uri": { preselect: true },
+        "request.method": { preselect: true }
+      }
+    },
+    [`${cluster}-glue`]: {
+      table_name: "ConnectPlusLineageRunOutcome",
+      base_where_clause: "",
+      org_filter: `WHERE orgID = ${orgId}`,
+      default_since_until: "SINCE 1 day ago UNTIL NOW",
+      field_metadata: {
+        "requestId": { is_request_id: true, preselect: true },
+        "lineageId": { preselect: true },
+        "block_name": { preselect: true },
+        "record_status": { preselect: true },
+        "traceId": { preselect: false },
+        "http.statusCode": { newrelic_type: "string", preselect: true },
+        "request.uri": { preselect: true },
+        "request.method": { preselect: true }
+      }
+    },
+    [`${cluster}-intouch-api`]: {
+      base_where_clause: `WHERE appName = '${appName}'`,
+      org_filter: `AND org_id = ${orgId}`,
+      default_since_until: "SINCE 1 day ago UNTIL NOW",
+      field_metadata: {
+        "httpResponseCode": { newrelic_type: "number", preselect: true },
+        "request.uri": { preselect: true },
+        "request.headers.userAgent": { preselect: true }
+      }
+    },
+    [`${cluster}-intouch-api-v3-jsvt`]: {
+      base_where_clause: `WHERE appName = '${appName}'`,
+      org_filter: `AND org_id = '${orgId}'`,
+      default_since_until: "SINCE 1 day ago UNTIL NOW",
+      field_metadata: {
+        "requestId": { is_request_id: true, preselect: true },
+        "http.statusCode": { newrelic_type: "number", preselect: true },
+        "request.uri": { preselect: true }
+      }
+    },
+    [`${cluster}-api-gateway`]: {
+      base_where_clause: `WHERE appName = '${appName}'`,
+      org_filter: "",
+      default_since_until: "SINCE 1 day ago UNTIL NOW",
+      field_metadata: {
+        "RequestId": { is_request_id: true, preselect: true },
+        "http.statusCode": { newrelic_type: "number", preselect: true },
+        "request.uri": { preselect: true },
+        "request.method": { preselect: true }
+      }
+    },
+    [`${cluster}-sol-api-gateway`]: {
+      base_where_clause: `WHERE appName = '${appName}'`,
+      org_filter: "",
+      default_since_until: "SINCE 1 day ago UNTIL NOW",
+      field_metadata: {
+        "requestId": { is_request_id: true, preselect: true },
+        "http.statusCode": { newrelic_type: "number", preselect: true },
+        "request.uri": { preselect: true },
+        "request.method": { preselect: true }
+      }
+    },
+    [`${cluster}-api-gateway-ext`]: {
+      base_where_clause: `WHERE appName = '${appName}'`,
+      org_filter: "",
+      default_since_until: "SINCE 1 day ago UNTIL NOW",
+      field_metadata: {
+        "RequestId": { is_request_id: true, preselect: true },
+        "http.statusCode": { newrelic_type: "number", preselect: true },
+        "request.uri": { preselect: true },
+        "request.method": { preselect: true }
+      }
+    }
+  },
+  defaultConfig: {
+    base_where_clause: `WHERE appName = '${appName}'`,
+    org_filter: `AND org_id = '${orgId}'`,
+    default_since_until: "SINCE 1 day ago UNTIL NOW",
+    field_metadata: {}
+  }
+});

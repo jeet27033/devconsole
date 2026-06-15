@@ -1,14 +1,7 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
 import * as Api from '../../../services/api';
 import { actionTypes, CONFIG_STATUS } from './constants';
-
-const toErrorMessage = (err, fallback) => {
-  if (!err) return fallback;
-  if (typeof err === 'string') return err;
-  if (err.message) return err.message;
-  if (err.error) return err.error;
-  return fallback;
-};
+import { toErrorMessage } from '../../../helper/sagaHelper';
 
 function* getConfigs(action) {
   try {

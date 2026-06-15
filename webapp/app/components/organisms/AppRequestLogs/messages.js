@@ -51,4 +51,12 @@ export default defineMessages({
     id: `${scope}.noFiltersSelected`,
     defaultMessage: 'No filters selected. Add fields from the dropdown above to filter your results.',
   },
+  dateTimeRange: {
+    id: `${scope}.dateTimeRange`,
+    defaultMessage: 'Date / Time Range',
+  },
+  extension: {
+    id: `${scope}.extension`,
+    defaultMessage: 'Extension',
+  },
 });

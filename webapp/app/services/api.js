@@ -121,6 +121,11 @@ export const getExtensionsList = async () => {
   return httpRequest(url, getVulcanAPICallObject('GET'));
 };
 
+export const getAppFields = async ({ appName }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/get-fields?appName=${encodeURIComponent(appName)}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
 export const getConfigData = async (body) => {
   const url = `${endpoints.devconsole_endpoint}/config/get`;
   return httpRequest(url, getVulcanAPICallObject('POST', body));

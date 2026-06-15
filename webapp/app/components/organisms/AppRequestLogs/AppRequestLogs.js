@@ -1,6 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { compose, bindActionCreators } from 'redux';
+import { createStructuredSelector } from 'reselect';
 import { injectIntl } from 'react-intl';
-import { withStyles } from '@capillarytech/vulcan-react-sdk/utils';
+import {
+  injectSaga,
+  injectReducer,
+  withStyles,
+} from '@capillarytech/vulcan-react-sdk/utils';
 import {
   CapRow,
   CapColumn,
@@ -12,66 +20,94 @@ import CapSpin from '@capillarytech/cap-ui-library/CapSpin';
 import CapIcon from '@capillarytech/cap-ui-library/CapIcon';
 
 import DateAndTimePicker from '../../molecules/DateAndTimePicker';
+import { formatTimestamp } from '../../../helper/dateHelper';
+import { REQUEST } from '../../pages/App/constants';
 import styles from './styles';
 import messages from './messages';
+import sagas from './saga';
+import reducer from './reducer';
+import * as actions from './action';
+import { REDUCER_KEY } from './constants';
+import {
+  makeSelectExtensionsMap,
+  makeSelectFetchingExtensions,
+  makeSelectAppConfig,
+  makeSelectFetchingAppFields,
+} from './selectors';
 
-const AppRequestLogs = ({ className, intl: { formatMessage } }) => {
-  const [applications] = useState([
-    { value: '', label: 'Select Application' },
-    { value: 'loyalty-engine-sg', label: 'Loyalty Engine (SG)' },
-    { value: 'campaign-manager-sg', label: 'Campaign Manager (SG)' },
-    { value: 'engage-plus-sg', label: 'Engage+ (SG)' },
-    { value: 'member-care-sg', label: 'Member Care (SG)' },
-    { value: 'insights-plus-sg', label: 'Insights+ (SG)' },
-  ]);
-  const [selectedApp, setSelectedApp] = useState('loyalty-engine-sg');
-  const [availableFields, setAvailableFields] = useState([
-    { name: 'http.method', label: 'HTTP Method', type: 'text', newrelic_type: 'string' },
-    { name: 'response.status', label: 'Response Status', type: 'number', newrelic_type: 'number' },
-    { name: 'host', label: 'Host', type: 'text', newrelic_type: 'string' },
-  ]);
-  const [selectedFields, setSelectedFields] = useState([
-    { name: 'request.uri', label: 'Request URI', type: 'text', newrelic_type: 'string', is_request_id: false, preselect: true },
-    { name: 'request.headers.requestId', label: 'Request ID', type: 'text', newrelic_type: 'string', is_request_id: true, preselect: true },
-    { name: 'duration', label: 'Duration (ms)', type: 'number', newrelic_type: 'number', is_request_id: false, preselect: true },
-  ]);
+const AppRequestLogs = ({
+  className,
+  intl: { formatMessage },
+  extensionsMap,
+  fetchingExtensions,
+  appConfig,
+  fetchingAppFields,
+  actions: boundActions,
+}) => {
+  useEffect(() => {
+    boundActions.getExtensionsList();
+  }, [boundActions]);
+
+  const extensionOptions = useMemo(
+    () =>
+      Object.keys(extensionsMap || {}).map((ext) => ({
+        key: ext,
+        value: ext,
+        label: ext,
+      })),
+    [extensionsMap],
+  );
+
+  const [selectedApp, setSelectedApp] = useState(null);
+  const [availableFields, setAvailableFields] = useState([]);
+  const [selectedFields, setSelectedFields] = useState([]);
   const [fieldToAdd, setFieldToAdd] = useState('');
   const [filterValues, setFilterValues] = useState({});
-  const [searchTypes, setSearchTypes] = useState({
-    'request.uri': 'exact',
-    'request.headers.requestId': 'exact',
-    'duration': 'exact',
-  });
+  const [searchTypes, setSearchTypes] = useState({});
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
-  const [results, setResults] = useState({
-    columns: ['request.headers.requestId', 'request.uri', 'duration', 'http.statusCode', 'name'],
-    events: [
-      { timestamp: 1712998532000, 'request.headers.requestId': 'req-a1b2c3d4', 'request.uri': '/api/v2/loyalty/points/accrue', duration: 45.2, 'http.statusCode': 200, name: 'WebTransaction/RestServlet/POST/v2/loyalty/points/accrue' },
-      { timestamp: 1712998535000, 'request.headers.requestId': 'req-e5f6g7h8', 'request.uri': '/api/v2/members/lookup', duration: 32.8, 'http.statusCode': 200, name: 'WebTransaction/RestServlet/GET/v2/members/lookup' },
-      { timestamp: 1712998538000, 'request.headers.requestId': 'req-i9j0k1l2', 'request.uri': '/api/v2/transactions/process', duration: 1250.3, 'http.statusCode': 500, name: 'WebTransaction/RestServlet/POST/v2/transactions/process' },
-      { timestamp: 1712998540000, 'request.headers.requestId': 'req-m3n4o5p6', 'request.uri': '/api/v2/coupons/validate', duration: 56.1, 'http.statusCode': 200, name: 'WebTransaction/RestServlet/POST/v2/coupons/validate' },
-      { timestamp: 1712998542000, 'request.headers.requestId': 'req-q7r8s9t0', 'request.uri': '/api/v2/tiers/calculate', duration: 210.4, 'http.statusCode': 200, name: 'WebTransaction/RestServlet/GET/v2/tiers/calculate' },
-      { timestamp: 1712998545000, 'request.headers.requestId': 'req-u1v2w3x4', 'request.uri': '/api/v2/campaigns/active', duration: 78.5, 'http.statusCode': 304, name: 'WebTransaction/RestServlet/GET/v2/campaigns/active' },
-      { timestamp: 1712998548000, 'request.headers.requestId': 'req-y5z6a7b8', 'request.uri': '/api/v2/notifications/send', duration: 3420.7, 'http.statusCode': 502, name: 'WebTransaction/RestServlet/POST/v2/notifications/send' },
-      { timestamp: 1712998550000, 'request.headers.requestId': 'req-c9d0e1f2', 'request.uri': '/api/v2/members/lookup', duration: 28.9, 'http.statusCode': 200, name: 'WebTransaction/RestServlet/GET/v2/members/lookup' },
-      { timestamp: 1712998553000, 'request.headers.requestId': 'req-g3h4i5j6', 'request.uri': '/api/v2/loyalty/points/redeem', duration: 98.4, 'http.statusCode': 200, name: 'WebTransaction/RestServlet/POST/v2/loyalty/points/redeem' },
-      { timestamp: 1712998555000, 'request.headers.requestId': 'req-k7l8m9n0', 'request.uri': '/api/v2/reports/summary', duration: 540.2, 'http.statusCode': 200, name: 'WebTransaction/RestServlet/GET/v2/reports/summary' },
-    ],
-  });
+  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [requestIdField, setRequestIdField] = useState('request.headers.requestId');
+  const [requestIdField, setRequestIdField] = useState(null);
   const [dateRange, setDateRange] = useState(null);
 
   const handleAppChange = useCallback((value) => {
     setSelectedApp(value);
-    if (!value) return;
-    // API call placeholder: fetch available fields for this app
     setAvailableFields([]);
     setSelectedFields([]);
     setFilterValues({});
     setSearchTypes({});
     setResults(null);
-  }, []);
+    if (!value) return;
+    boundActions.getAppFields(value);
+  }, [boundActions]);
+
+  useEffect(() => {
+    if (!appConfig || !appConfig.field_metadata) return;
+    const fieldMeta = appConfig.field_metadata;
+    const allFields = Object.entries(fieldMeta).map(([name, meta]) => ({
+      name,
+      label: name,
+      newrelic_type: meta.newrelic_type || null,
+      is_request_id: meta.is_request_id || false,
+      preselect: meta.preselect || false,
+    }));
+
+    const requestId = allFields.find((f) => f.is_request_id);
+    if (requestId) setRequestIdField(requestId.name);
+
+    const preselectFields = allFields.filter((f) => f.preselect);
+    const remainingFields = allFields
+      .filter((f) => !f.preselect)
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    setSelectedFields(preselectFields);
+    setAvailableFields(remainingFields);
+    const initSearchTypes = {};
+    preselectFields.forEach((f) => {
+      initSearchTypes[f.name] = 'exact';
+    });
+    setSearchTypes(initSearchTypes);
+  }, [appConfig]);
 
   const handleAddField = useCallback(() => {
     if (!fieldToAdd) return;
@@ -124,22 +160,6 @@ const AppRequestLogs = ({ className, intl: { formatMessage } }) => {
     setDateRange(range);
   }, []);
 
-  const formatTimestamp = (ts) => {
-    try {
-      return new Date(ts).toLocaleString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        timeZoneName: 'short',
-      });
-    } catch {
-      return ts;
-    }
-  };
-
   const fieldOptions = availableFields.map((f) => ({
     value: f.name,
     label: f.label,
@@ -149,14 +169,26 @@ const AppRequestLogs = ({ className, intl: { formatMessage } }) => {
     <CapRow className={`${className} app-request-logs`}>
       <CapColumn span={24}>
         <div className="control-panel">
-          <DateAndTimePicker onApply={handleDateApply} />
-          <CapSelect
-            className="app-select"
-            options={applications}
-            value={selectedApp}
-            onChange={handleAppChange}
-            placeholder={formatMessage(messages.selectApplication)}
-          />
+          <div className="control-item">
+            <span className="control-label">
+              {formatMessage(messages.dateTimeRange)}
+            </span>
+            <DateAndTimePicker onApply={handleDateApply} />
+          </div>
+          <div className="control-item">
+            <span className="control-label">
+              {formatMessage(messages.extension)}
+            </span>
+            <CapSelect
+              className="app-select"
+              options={extensionOptions}
+              value={selectedApp || undefined}
+              onChange={handleAppChange}
+              loading={fetchingExtensions === REQUEST}
+              placeholder={formatMessage(messages.selectApplication)}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
 
         {selectedApp && (
@@ -192,6 +224,8 @@ const AppRequestLogs = ({ className, intl: { formatMessage } }) => {
                     ]}
                     value={fieldToAdd}
                     onChange={setFieldToAdd}
+                    loading={fetchingAppFields === REQUEST}
+                    style={{ width: '100%' }}
                   />
                   <CapButton
                     type="secondary"
@@ -341,4 +375,36 @@ const AppRequestLogs = ({ className, intl: { formatMessage } }) => {
   );
 };
 
-export default injectIntl(withStyles(AppRequestLogs, styles));
+AppRequestLogs.propTypes = {
+  className: PropTypes.string,
+  extensionsMap: PropTypes.object,
+  fetchingExtensions: PropTypes.string,
+  appConfig: PropTypes.object,
+  fetchingAppFields: PropTypes.string,
+  actions: PropTypes.object.isRequired,
+};
+
+const mapStateToProps = createStructuredSelector({
+  extensionsMap: makeSelectExtensionsMap(),
+  fetchingExtensions: makeSelectFetchingExtensions(),
+  appConfig: makeSelectAppConfig(),
+  fetchingAppFields: makeSelectFetchingAppFields(),
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators(actions, dispatch),
+});
+
+const withConnect = connect(mapStateToProps, mapDispatchToProps);
+
+const withSaga = sagas.map((saga, index) =>
+  injectSaga({ key: `${REDUCER_KEY}-${index}`, saga }),
+);
+
+const withReducer = injectReducer({ key: REDUCER_KEY, reducer });
+
+export default compose(
+  ...withSaga,
+  withReducer,
+  withConnect,
+)(injectIntl(withStyles(AppRequestLogs, styles)));

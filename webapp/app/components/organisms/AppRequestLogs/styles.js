@@ -25,9 +25,21 @@ export default css`
 
   .control-panel {
     display: flex;
-    align-items: center;
-    gap: ${CAP_SPACE_08};
+    align-items: flex-end;
+    gap: ${CAP_SPACE_16};
     margin-bottom: ${CAP_SPACE_16};
+  }
+
+  .control-item {
+    display: flex;
+    flex-direction: column;
+    gap: ${CAP_SPACE_04};
+  }
+
+  .control-label {
+    font-size: ${FONT_SIZE_S};
+    font-weight: ${FONT_WEIGHT_MEDIUM};
+    color: ${FONT_COLOR_02};
   }
 
   .control-panel .app-select {
@@ -99,7 +111,7 @@ export default css`
   }
 
   .filter-field-label {
-    width: 10rem;
+    width: 20rem;
     font-size: ${FONT_SIZE_M};
     font-weight: 500;
     color: ${FONT_COLOR_01};
