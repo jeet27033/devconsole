@@ -24,7 +24,7 @@ export const saveConfigRequest = async(
           payload?.cluster,
           payload?.configName,
           payload?.configValue,
-          payload?.defaultValue,
+          payload?.defaultValue ?? '',
           payload?.isSecret,
           payload?.tags,
           userMail,
@@ -55,12 +55,13 @@ export const saveConfigRequest = async(
 export const getConfigData = async (
   orgId: number,
   status: string = 'SUCCESS',
+  configName: string = '',
 ) => {
   if (config?.MASTER_APITESTER) {
     const mysql = getMySQLPool();
     const [configs] = await mysql.query(
-      'SELECT configName,configValue,defaultValue,isSecret,user,status,orgId,cluster FROM config_requests where orgId = ? and status = ? ORDER BY auto_update_time DESC',
-      [orgId, status],
+      'SELECT id,configName,configValue,defaultValue,isSecret,user,status,orgId,cluster FROM config_requests where orgId = ? and status = ? and configName LIKE ? ORDER BY auto_update_time DESC',
+      [orgId, status, `%${configName}%`],
     );
     return maskSecrets(configs);
   }

@@ -28,8 +28,9 @@ function* getConfigs(action) {
 
 function* getConfigRequests(action) {
   try {
-    const status = action.payload?.status ?? CONFIG_STATUS.PENDING;
-    const res = yield call(Api.getConfigData, { status });
+    const status = action.payload?.status ?? CONFIG_STATUS.PENDING_APPROVAL;
+    const configName = action.payload?.configName ?? '';
+    const res = yield call(Api.getConfigData, { status, configName });
     if (res?.success) {
       yield put({
         type: actionTypes.GET_CONFIG_REQUESTS_SUCCESS,
@@ -58,13 +59,12 @@ function* saveConfig(action) {
         data: res.result,
       });
       const action_type = action.payload?.action;
+      const pendingPayload = { payload: { status: CONFIG_STATUS.PENDING_APPROVAL } };
       if (action_type === 'approve') {
         yield put({ type: actionTypes.GET_CONFIGS_REQUEST });
-        yield put({ type: actionTypes.GET_CONFIG_REQUESTS_REQUEST });
-      } else if (action_type === 'reject') {
-        yield put({ type: actionTypes.GET_CONFIG_REQUESTS_REQUEST });
+        yield put({ type: actionTypes.GET_CONFIG_REQUESTS_REQUEST, ...pendingPayload });
       } else {
-        yield put({ type: actionTypes.GET_CONFIG_REQUESTS_REQUEST });
+        yield put({ type: actionTypes.GET_CONFIG_REQUESTS_REQUEST, ...pendingPayload });
       }
     } else {
       yield put({

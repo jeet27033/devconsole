@@ -7,17 +7,18 @@ export const CONFIG_TABLE_COLUMNS = [
 ];
 
 export const REQUEST_TABLE_COLUMNS = [
-  { title: 'Id', dataIndex: 'id', width: '6%' },
-  { title: 'Config Name', dataIndex: 'configName', width: '18%' },
-  { title: 'Config Value', dataIndex: 'configValue', width: '18%' },
-  { title: 'Is Secret', dataIndex: 'isSecret', width: '15%' },
-  { title: 'Submitted by', dataIndex: 'submittedBy', width: '8%' },
-  { title: 'Status', dataIndex: 'status', width: '20%' },
+  { title: '#', dataIndex: 'idx', width: '5%' },
+  { title: 'Config Name', dataIndex: 'configName', width: '22%' },
+  { title: 'Config Value', dataIndex: 'configValue', width: '25%' },
+  { title: 'Secret', dataIndex: 'isSecret', width: '8%' },
+  { title: 'Submitted By', dataIndex: 'user', width: '20%' },
+  { title: 'Status', dataIndex: 'status', width: '12%' },
+  { title: 'Actions', dataIndex: 'actions', width: '8%' },
 ];
 
 export const CONFIG_STATUS = {
   SUCCESS: 'SUCCESS',
-  PENDING: 'PENDING',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
   REJECTED: 'REJECTED',
 };
 

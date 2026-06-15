@@ -44,6 +44,7 @@ export default css`
   .config-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
   }
 
   .config-table th {
@@ -103,6 +104,39 @@ export default css`
   .requests-table-container {
     max-height: 31.25rem;
     overflow-y: auto;
+    border: 0.0625rem solid ${CAP_G20};
+    border-radius: 0.375rem;
+  }
+
+  .cell-truncate {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: ${FONT_SIZE_S};
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .status-pending-approval {
+    background: #fff7e6;
+    color: #d46b08;
+  }
+
+  .status-success {
+    background: #f6ffed;
+    color: #389e0d;
+  }
+
+  .status-rejected {
+    background: #fff1f0;
+    color: #cf1322;
   }
 
   .requests-warning {
