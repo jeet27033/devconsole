@@ -21,6 +21,7 @@ const config = {
   MYSQL_DATABASE: process.env.MYSQL_DATABASE || '',
   MONGO_URI: process.env.MONGO_URI || '',
   MONGO_POOL_SIZE: parseInt(process.env.MONGO_POOL_SIZE || '', 10),
+  MONGO_EXTENSIONS_CONN_STR: process.env.MONGO_EXTENSIONS_CONN_STR || '',
   JENKINS_URL: process.env.JENKINS_URL || '',
   JENKINS_AUTH: process.env.JENKINS_AUTH || '',
   JENKINS_USER: process.env.JENKINS_USER || '',
@@ -29,6 +30,9 @@ const config = {
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
   LOKI_URL: process.env.LOKI_URL || '',
   MASTER_APITESTER: process.env.MASTER_APITESTER || '',
+  HOTSWAP_URL: process.env.HOTSWAP_URL || 'http://ptmysqlhotswap.default.svc.cluster.local',
+  HOTSWAP_USER: process.env.HOTSWAP_USER || 'apitester',
+  HOTSWAP_PASSWORD: process.env.HOTSWAP_PASSWORD || '',
 };
 
 export default config;

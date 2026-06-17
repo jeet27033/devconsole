@@ -13,6 +13,7 @@ import {
   LokiQueryResponse,
 } from '../helpers/loki';
 import { getMySQLPool } from '../loaders/mysql';
+import mongoose from 'mongoose';
 import {
   IN_PROGRESS,
   SLAVE_APITESTER,
@@ -590,6 +591,252 @@ export const getAppConfig = (appName: string, orgId: number, cluster: string) =>
   return (matchedKey ? appConfigs[matchedKey] : null) ?? defaultConfig;
 }
 
+
+export const fetchOrgDBs = (orgId: number, extendedDbEnv: string = process.env.EXTENDED_DB_ENV || '') => {
+  const dbListForOrg = [`NeoDb_${orgId}`, `NeoDb_${orgId}_uat`];
+
+  if (extendedDbEnv) {
+    try {
+      const extendedData = JSON.parse(extendedDbEnv);
+      if (extendedData[String(orgId)]) {
+        dbListForOrg.push(...JSON.parse(extendedData[String(orgId)]));
+      }
+    } catch (e) {
+      logger.error('fetchOrgDBs: failed to parse EXTENDED_DB_ENV', e);
+    }
+  }
+
+  return dbListForOrg;
+}
+
+const getMongoSlaveUri = () => {
+  const uri = config.MONGO_EXTENSIONS_CONN_STR;
+  if (!uri) throw new Error('MONGO_EXTENSIONS_CONN_STR is not configured');
+  return uri.includes('?') ? uri : `${uri}?replicaSet=rs0&serverSelectionTimeoutMS=40000`;
+};
+
+export const dbCollections = async (db: string): Promise<string[]> => {
+  const client = new mongoose.mongo.MongoClient(getMongoSlaveUri());
+  try {
+    await client.connect();
+    const collections = await client.db(db).listCollections().toArray();
+    return collections.map((c) => c.name);
+  } finally {
+    await client.close();
+  }
+};
+
+export const getCollectionSchema = async (db: string, collection: string): Promise<Array<{ field: string; types: string[] }>> => {
+  const client = new mongoose.mongo.MongoClient(getMongoSlaveUri());
+  try {
+    await client.connect();
+    const docs = await client.db(db).collection(collection).aggregate([
+      { $sample: { size: 50 } },
+      { $project: { fields: { $objectToArray: '$$ROOT' } } },
+      { $unwind: '$fields' },
+      { $group: { _id: '$fields.k', types: { $addToSet: { $type: '$fields.v' } } } },
+      { $sort: { _id: 1 } },
+    ]).toArray();
+    return docs.map((d: any) => ({ field: d._id, types: d.types }));
+  } finally {
+    await client.close();
+  }
+};
+
+const MONGO_DOC_LIMIT_DEFAULT = parseInt(process.env.MONGO_DOC_LIMIT_DEFAULT || '25', 10);
+const MONGO_MAX_DOC_LIMIT = parseInt(process.env.MONGO_MAX_DOC_LIMIT || '100', 10);
+const QUERY_TIMEOUT_MS = 30000;
+
+const READ_METHODS = new Set([
+  'find', 'findOne', 'countDocuments', 'distinct',
+  'getIndexes', 'estimatedDocumentCount', 'aggregate', 'explain',
+]);
+
+export const isWriteQuery = (query: string): boolean => {
+  const methodPattern = /db(?:\.(\w+)|\["(\w+)"\])\.(\w+)\s*\(/g;
+  let match;
+  while ((match = methodPattern.exec(query)) !== null) {
+    const method = match[3];
+    if (!READ_METHODS.has(method)) return true;
+  }
+  return false;
+};
+
+const preprocessQuery = (query: string): string => {
+  // Add default limit to find() without one
+  const findPos = query.lastIndexOf('.find(');
+  if (findPos !== -1) {
+    const limitPos = query.lastIndexOf('.limit(', findPos);
+    if (limitPos === -1) {
+      // No limit — append default
+      const closePos = query.indexOf(')', findPos + 5);
+      if (closePos !== -1) {
+        query = query.slice(0, closePos + 1) + `.limit(${MONGO_DOC_LIMIT_DEFAULT})` + query.slice(closePos + 1);
+      }
+    } else {
+      // Cap existing limit
+      query = query.replace(/\.limit\((\d+)\)/, (_, n) =>
+        `.limit(${Math.min(parseInt(n, 10), MONGO_MAX_DOC_LIMIT)})`
+      );
+    }
+  }
+  return query;
+};
+
+export const executeMongoQuery = (db: string, query: string): Promise<{ output: string; executionTime: number }> => {
+  return new Promise((resolve, reject) => {
+    const baseUri = getMongoSlaveUri();
+    const processed = preprocessQuery(query);
+
+    // Inject the db name into the URI so mongosh connects directly — avoids the "switched to db" stdout noise
+    const uriWithDb = baseUri.replace(/(mongodb(?:\+srv)?:\/\/[^/]+)(\/.*)/, `$1/${db}$2`);
+
+    const END_MARKER = '__QUERY_DONE__';
+    const script = `
+      try {
+        const __r = ${processed};
+        const __out = (__r && typeof __r.toArray === 'function') ? __r.toArray() : __r;
+        print(JSON.stringify(__out, null, 2));
+      } catch(e) {
+        print(JSON.stringify({ error: e.message }));
+      }
+      print("${END_MARKER}");
+    `;
+
+    const child = require('child_process').spawn(
+      'mongosh',
+      [uriWithDb, '--quiet', '--norc', '--eval', script],
+      { timeout: QUERY_TIMEOUT_MS }
+    );
+
+    let output = '';
+    let errOutput = '';
+    const start = Date.now();
+
+    child.stdout.on('data', (d: Buffer) => { output += d.toString(); });
+    child.stderr.on('data', (d: Buffer) => { errOutput += d.toString(); });
+
+    child.on('close', (code: number) => {
+      const executionTime = Date.now() - start;
+      const markerIdx = output.indexOf(END_MARKER);
+      const result = (markerIdx !== -1 ? output.slice(0, markerIdx) : output).trim();
+
+      if (code !== 0 && !result) {
+        return reject(new Error(errOutput.trim() || `mongosh exited with code ${code}`));
+      }
+      resolve({ output: result, executionTime });
+    });
+
+    child.on('error', (err: Error) => reject(err));
+  });
+};
+
+export interface MongoAuditLogEntry {
+  query: string;
+  created_by: string;
+  query_execution_time: number | null;
+  status: 'SUCCESS' | 'FAILED' | 'PENDING_APPROVAL' | 'REJECTED';
+  no_of_records: number | null;
+  mongo_database: string;
+  collection: string;
+  org_id: number;
+}
+
+export const saveMongoAuditLog = async (entry: MongoAuditLogEntry): Promise<number | null> => {
+  const pool = getMySQLPool();
+  const [result]: any = await pool.query(
+    'INSERT INTO mongo_audit_logs (query, created_by, query_execution_time, status, no_of_records, mongo_database, collection, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [entry.query, entry.created_by, entry.query_execution_time, entry.status, entry.no_of_records, entry.mongo_database, entry.collection, entry.org_id],
+  );
+  return result?.insertId ?? null;
+};
+
+export const getMongoAuditLogById = async (id: number, orgId: number) => {
+  const pool = getMySQLPool();
+  const [rows]: any = await pool.query(
+    'SELECT id, query, created_by, created_at, status, no_of_records, query_execution_time, mongo_database, collection, approved_by, updated_at, hotswap_id FROM mongo_audit_logs WHERE id = ? AND org_id = ?',
+    [id, orgId],
+  );
+  return rows?.[0] ?? null;
+};
+
+export const getMongoAuditLogs = async (orgId: number, filters: { status?: string; search?: string; lastId?: number } = {}) => {
+  const pool = getMySQLPool();
+  const conditions: string[] = ['org_id = ?'];
+  const values: any[] = [orgId];
+
+  if (filters.status) {
+    conditions.push('status = ?');
+    values.push(filters.status.toUpperCase());
+  }
+  if (filters.search) {
+    conditions.push('(created_by LIKE ? OR query LIKE ?)');
+    values.push(`%${filters.search}%`, `%${filters.search}%`);
+  }
+  if (filters.lastId) {
+    conditions.push('id < ?');
+    values.push(filters.lastId);
+  }
+
+  const where = `WHERE ${conditions.join(' AND ')}`;
+  const [rows] = await pool.query(
+    `SELECT id, query, created_by, created_at, status, no_of_records, query_execution_time, mongo_database, collection FROM mongo_audit_logs ${where} ORDER BY created_at DESC LIMIT 50`,
+    values,
+  );
+  return rows;
+};
+
+
+
+const hotswapAuth = () =>
+  'Basic ' + Buffer.from(`${config.HOTSWAP_USER}:${config.HOTSWAP_PASSWORD}`).toString('base64');
+
+export const approveMongoAuditLog = async (id: number, orgId: number, approverUser: string) => {
+  const pool = getMySQLPool();
+  const [rows]: any = await pool.query(
+    'SELECT id, created_by, status, hotswap_id FROM mongo_audit_logs WHERE id = ? AND org_id = ?',
+    [id, orgId],
+  );
+  const entry = rows?.[0];
+  if (!entry) throw new Error('Audit log not found');
+  if (entry.status !== 'PENDING_APPROVAL') throw new Error('Query is already approved/rejected');
+  if (entry.created_by?.split('@')[0] === approverUser?.split('@')[0]) throw new Error('Approver and creator cannot be the same person');
+
+  const hotswapId = String(entry.hotswap_id);
+  const res = await callApi({
+    url: `${config.HOTSWAP_URL}/manual/internal/approve/${hotswapId}`,
+    method: 'POST',
+    headers: { Authorization: hotswapAuth(), 'X-Cap-User-Id': approverUser },
+  });
+
+  if (res.success) {
+    await pool.query('UPDATE mongo_audit_logs SET status = ?, approved_by = ? WHERE id = ?', ['SUCCESS', approverUser, id]);
+  }
+  return res.data;
+};
+
+export const rejectMongoAuditLog = async (id: number, orgId: number, rejectorUser: string) => {
+  const pool = getMySQLPool();
+  const [rows]: any = await pool.query(
+    'SELECT id, status, hotswap_id FROM mongo_audit_logs WHERE id = ? AND org_id = ?',
+    [id, orgId],
+  );
+  const entry = rows?.[0];
+  if (!entry) throw new Error('Audit log not found');
+  if (entry.status !== 'PENDING_APPROVAL') throw new Error('Query is already approved/rejected');
+
+  const hotswapId = String(entry.hotswap_id);
+  const res = await callApi({
+    url: `${config.HOTSWAP_URL}/manual/internal/${hotswapId}/reject`,
+    method: 'POST',
+    headers: { Authorization: hotswapAuth(), 'X-Cap-User-Id': rejectorUser },
+  });
+
+  if (res.success) {
+    await pool.query('UPDATE mongo_audit_logs SET status = ?, approved_by = ? WHERE id = ?', ['REJECTED', rejectorUser, id]);
+  }
+  return res.data;
+};
 
 export const fetchLokiLogs = async (
   orgId: number,

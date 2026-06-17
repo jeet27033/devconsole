@@ -19,16 +19,16 @@ export const saveConfigRequest = async(
       mysql.query(
         'INSERT INTO config_requests(request,orgId,cluster,configName,configValue,defaultValue,isSecret,tags, user, status) VALUES (?,?,?,?,?,?,?,?,?,?)',
         [
-          payload,
-          payload?.orgId,
-          payload?.cluster,
-          payload?.configName,
-          payload?.configValue,
+          JSON.stringify(payload),
+          payload?.orgId ?? null,
+          payload?.cluster ?? null,
+          payload?.configName ?? null,
+          payload?.configValue ?? null,
           payload?.defaultValue ?? '',
-          payload?.isSecret,
-          payload?.tags,
-          userMail,
-          status,
+          payload?.isSecret ?? false,
+          payload?.tags ?? null,
+          userMail ?? null,
+          status ?? null,
         ],
       );
       break;

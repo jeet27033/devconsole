@@ -171,6 +171,79 @@ export default css`
     align-items: center;
   }
 
+  .workbench-body {
+    display: flex;
+    gap: ${CAP_SPACE_16};
+    align-items: flex-start;
+  }
+
+  .schema-panel {
+    width: 14rem;
+    flex-shrink: 0;
+    background: ${CAP_WHITE};
+    border: 0.0625rem solid ${CAP_G20};
+    border-radius: 0.25rem;
+    overflow: hidden;
+  }
+
+  .schema-panel-header {
+    padding: ${CAP_SPACE_12} ${CAP_SPACE_16};
+    border-bottom: 0.0625rem solid ${CAP_G20};
+    background: ${CAP_G09};
+    font-weight: 600;
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_01};
+  }
+
+  .schema-panel-body {
+    padding: ${CAP_SPACE_08} 0;
+    max-height: 36rem;
+    overflow-y: auto;
+  }
+
+  .schema-field-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: ${CAP_SPACE_04} ${CAP_SPACE_16};
+    cursor: pointer;
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_01};
+    gap: ${CAP_SPACE_08};
+  }
+
+  .schema-field-row:hover {
+    background: ${CAP_G09};
+  }
+
+  .schema-field-name {
+    font-family: 'Courier New', Courier, monospace;
+    word-break: break-all;
+  }
+
+  .schema-type-badge {
+    flex-shrink: 0;
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 0.75rem;
+    background: ${CAP_SECONDARY.base}1a;
+    color: ${CAP_SECONDARY.base};
+    font-weight: 500;
+    text-transform: lowercase;
+  }
+
+  .schema-empty {
+    padding: ${CAP_SPACE_16};
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_02};
+    text-align: center;
+  }
+
+  .main-panel {
+    flex: 1;
+    min-width: 0;
+  }
+
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

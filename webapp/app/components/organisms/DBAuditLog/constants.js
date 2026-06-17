@@ -1,84 +1,36 @@
-export const STATUS_OPTIONS = [
-  { key: 'all', label: 'All Statuses', value: 'all' },
-  { key: 'pending_approval', label: 'Pending Approval', value: 'pending_approval' },
-  { key: 'success', label: 'Success', value: 'success' },
-  { key: 'failed', label: 'Failed', value: 'failed' },
-  { key: 'rejected', label: 'Rejected', value: 'rejected' },
-];
-
-export const DUMMY_AUDIT_DATA = [
-  {
-    key: '1',
-    id: 'AUD-001',
-    query: 'db.users.find({ status: "active" }).limit(100)',
-    createdBy: 'jeet.patel@capillarytech.com',
-    createdOn: '2026-04-12 09:15:32',
-    status: 'success',
-    executionTime: 42,
-  },
-  {
-    key: '2',
-    id: 'AUD-002',
-    query: 'db.transactions.aggregate([{ $match: { amount: { $gt: 500 } } }])',
-    createdBy: 'n.shah@capillary.com',
-    createdOn: '2026-04-12 08:45:10',
-    status: 'success',
-    executionTime: 187,
-  },
-  {
-    key: '3',
-    id: 'AUD-003',
-    query: 'db.members.updateMany({}, { $set: { tier: "gold" } })',
-    createdBy: 'n.shah@capillary.com',
-    createdOn: '2026-04-11 17:30:00',
-    status: 'pending_approval',
-    executionTime: null,
-  },
-  {
-    key: '4',
-    id: 'AUD-004',
-    query: 'db.rewards.deleteMany({ expiry: { $lt: new Date() } })',
-    createdBy: 'jeet.patel@capillarytech.com',
-    createdOn: '2026-04-11 14:22:18',
-    status: 'rejected',
-    executionTime: null,
-  },
-  {
-    key: '5',
-    id: 'AUD-005',
-    query: 'db.sessions.find({ userId: ObjectId("507f1f77bcf86cd799439011") })',
-    createdBy: 'n.shah@capillary.com',
-    createdOn: '2026-04-11 11:05:44',
-    status: 'success',
-    executionTime: 15,
-  },
-  {
-    key: '6',
-    id: 'AUD-006',
-    query: 'db.events.insertMany([{ type: "click", page: "/home" }])',
-    createdBy: 'n.shah@capillary.com',
-    createdOn: '2026-04-10 16:40:55',
-    status: 'failed',
-    executionTime: 320,
-  },
-  {
-    key: '7',
-    id: 'AUD-007',
-    query: 'db.users.createIndex({ email: 1 }, { unique: true })',
-    createdBy: 'jeet.patel@capillarytech.com',
-    createdOn: '2026-04-10 10:12:30',
-    status: 'pending_approval',
-    executionTime: null,
-  },
-  {
-    key: '8',
-    id: 'AUD-008',
-    query: 'db.loyalty.find({ points: { $gte: 1000 } }).sort({ points: -1 })',
-    createdBy: 'n.shah@capillary.com',
-    createdOn: '2026-04-09 15:55:12',
-    status: 'success',
-    executionTime: 63,
-  },
-];
+import { defineActionTypes } from '@capillarytech/vulcan-react-sdk/utils';
 
 export const DEBOUNCE_MS = 300;
+
+export const REDUCER_KEY = `${CURRENT_APP_NAME}_dbAuditLog`;
+
+const scope = '/Components/organisms/DBAuditLog/';
+
+export const actionTypes = defineActionTypes(
+  {
+    GET_MONGO_AUDIT_LOGS_REQUEST: 'GET_MONGO_AUDIT_LOGS_REQUEST',
+    GET_MONGO_AUDIT_LOGS_SUCCESS: 'GET_MONGO_AUDIT_LOGS_SUCCESS',
+    GET_MONGO_AUDIT_LOGS_FAILURE: 'GET_MONGO_AUDIT_LOGS_FAILURE',
+    GET_MONGO_AUDIT_LOG_DETAIL_REQUEST: 'GET_MONGO_AUDIT_LOG_DETAIL_REQUEST',
+    GET_MONGO_AUDIT_LOG_DETAIL_SUCCESS: 'GET_MONGO_AUDIT_LOG_DETAIL_SUCCESS',
+    GET_MONGO_AUDIT_LOG_DETAIL_FAILURE: 'GET_MONGO_AUDIT_LOG_DETAIL_FAILURE',
+    CLEAR_MONGO_AUDIT_LOG_DETAIL: 'CLEAR_MONGO_AUDIT_LOG_DETAIL',
+
+    APPROVE_MONGO_AUDIT_LOG_REQUEST: 'APPROVE_MONGO_AUDIT_LOG_REQUEST',
+    APPROVE_MONGO_AUDIT_LOG_SUCCESS: 'APPROVE_MONGO_AUDIT_LOG_SUCCESS',
+    APPROVE_MONGO_AUDIT_LOG_FAILURE: 'APPROVE_MONGO_AUDIT_LOG_FAILURE',
+
+    REJECT_MONGO_AUDIT_LOG_REQUEST: 'REJECT_MONGO_AUDIT_LOG_REQUEST',
+    REJECT_MONGO_AUDIT_LOG_SUCCESS: 'REJECT_MONGO_AUDIT_LOG_SUCCESS',
+    REJECT_MONGO_AUDIT_LOG_FAILURE: 'REJECT_MONGO_AUDIT_LOG_FAILURE',
+  },
+  { prefix: CURRENT_APP_NAME, scope },
+);
+
+export const STATUS_OPTIONS = [
+  { key: 'all', label: 'All Statuses', value: 'all' },
+  { key: 'PENDING_APPROVAL', label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+  { key: 'SUCCESS', label: 'Success', value: 'SUCCESS' },
+  { key: 'FAILED', label: 'Failed', value: 'FAILED' },
+  { key: 'REJECTED', label: 'Rejected', value: 'REJECTED' },
+];

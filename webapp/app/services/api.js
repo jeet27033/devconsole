@@ -126,6 +126,51 @@ export const getAppFields = async ({ appName }) => {
   return httpRequest(url, getVulcanAPICallObject('GET'));
 };
 
+export const getOrgDBs = async () => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/get-dbs`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getDBCollections = async ({ db }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/get-collections?db=${encodeURIComponent(db)}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const executeMongoQuery = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/mongo-query`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const getMongoAuditLogs = async ({ status, search, lastId } = {}) => {
+  const params = new URLSearchParams();
+  if (status && status !== 'all') params.set('status', status);
+  if (search) params.set('search', search);
+  if (lastId) params.set('lastId', lastId);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const url = `${endpoints.devconsole_endpoint}/extensions/mongo-audit-logs${query}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getMongoAuditLogDetail = async ({ id }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/mongo-audit-logs/${id}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const approveMongoAuditLog = async ({ id }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/mongo-audit-logs/${id}/approve`;
+  return httpRequest(url, getVulcanAPICallObject('POST'));
+};
+
+export const rejectMongoAuditLog = async ({ id }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/mongo-audit-logs/${id}/reject`;
+  return httpRequest(url, getVulcanAPICallObject('POST'));
+};
+
+export const getMongoSchema = async ({ db, collection }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/mongo-schema?db=${encodeURIComponent(db)}&collection=${encodeURIComponent(collection)}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
 export const getConfigData = async (body) => {
   const url = `${endpoints.devconsole_endpoint}/config/get`;
   return httpRequest(url, getVulcanAPICallObject('POST', body));

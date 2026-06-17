@@ -2,6 +2,8 @@ import { css } from 'styled-components';
 import * as styledVars from '@capillarytech/cap-ui-library/styled/variables';
 
 const {
+  CAP_SPACE_04,
+  CAP_SPACE_08,
   CAP_SPACE_12,
   CAP_SPACE_16,
   CAP_SPACE_24,
@@ -94,5 +96,87 @@ export default css`
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: ${FONT_SIZE_S};
+  }
+
+  .audit-table .ant-table-tbody > tr {
+    cursor: pointer;
+  }
+
+  /* ── Query Detail Modal ── */
+
+  .detail-status-row {
+    display: flex;
+    align-items: center;
+    gap: ${CAP_SPACE_12};
+    padding: ${CAP_SPACE_12} ${CAP_SPACE_16};
+    background: ${CAP_G09};
+    border-radius: 0.375rem;
+    margin-bottom: ${CAP_SPACE_16};
+  }
+
+  .detail-id-label {
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_02};
+  }
+
+  .detail-id-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: ${FONT_COLOR_01};
+  }
+
+  .detail-section-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: ${FONT_COLOR_02};
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: ${CAP_SPACE_16} 0 ${CAP_SPACE_08};
+    padding-bottom: ${CAP_SPACE_04};
+    border-bottom: 0.0625rem solid ${CAP_G20};
+  }
+
+  .detail-query-block {
+    background: #1a1a2e;
+    color: #e2e8f0;
+    padding: ${CAP_SPACE_12} ${CAP_SPACE_16};
+    border-radius: 0.375rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 10rem;
+    overflow-y: auto;
+    border: 0.0625rem solid #2d3748;
+    margin-bottom: ${CAP_SPACE_16};
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: ${CAP_SPACE_12} ${CAP_SPACE_24};
+    margin-bottom: ${CAP_SPACE_08};
+  }
+
+  .detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+  }
+
+  .detail-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: ${FONT_COLOR_02};
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .detail-value {
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_01};
+    font-weight: 500;
+    word-break: break-word;
   }
 `;

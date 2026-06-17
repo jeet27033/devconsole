@@ -67,4 +67,20 @@ export default defineMessages({
     id: `${scope}.noResponse`,
     defaultMessage: 'Run a query to see results here.',
   },
+  schemaTitle: {
+    id: `${scope}.schemaTitle`,
+    defaultMessage: 'Schema',
+  },
+  schemaEmpty: {
+    id: `${scope}.schemaEmpty`,
+    defaultMessage: 'Select a collection and click Load Schema.',
+  },
+  schemaLoading: {
+    id: `${scope}.schemaLoading`,
+    defaultMessage: 'Loading schema...',
+  },
+  schemaError: {
+    id: `${scope}.schemaError`,
+    defaultMessage: 'Failed to load schema.',
+  },
 });

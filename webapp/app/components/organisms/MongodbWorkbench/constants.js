@@ -1,36 +1,30 @@
-export const DUMMY_DATABASES = [
-  { key: 'glue', label: 'glue', value: 'glue' },
-  { key: 'admin', label: 'admin', value: 'admin' },
-  { key: 'local', label: 'local', value: 'local' },
-  { key: 'loyalty', label: 'loyalty', value: 'loyalty' },
-];
-
-export const DUMMY_COLLECTIONS = {
-  glue: [
-    { key: 'users', label: 'users', value: 'users' },
-    { key: 'sessions', label: 'sessions', value: 'sessions' },
-    { key: 'events', label: 'events', value: 'events' },
-  ],
-  admin: [
-    { key: 'system.users', label: 'system.users', value: 'system.users' },
-    { key: 'system.version', label: 'system.version', value: 'system.version' },
-  ],
-  local: [
-    { key: 'startup_log', label: 'startup_log', value: 'startup_log' },
-  ],
-  loyalty: [
-    { key: 'members', label: 'members', value: 'members' },
-    { key: 'transactions', label: 'transactions', value: 'transactions' },
-    { key: 'rewards', label: 'rewards', value: 'rewards' },
-  ],
-};
-
-export const DUMMY_QUERY_RESPONSE = `{
-  "_id": "507f1f77bcf86cd799439011",
-  "name": "John Doe",
-  "age": 25,
-  "email": "john.doe@example.com",
-  "createdAt": "2026-01-15T10:30:00Z"
-}`;
+import { defineActionTypes } from '@capillarytech/vulcan-react-sdk/utils';
 
 export const MAX_QUERY_TABS = 10;
+
+const scope = '/Components/organisms/MongodbWorkbench/';
+
+export const REDUCER_KEY = `${CURRENT_APP_NAME}_mongodbWorkbench`;
+
+export const actionTypes = defineActionTypes(
+  {
+    GET_ORG_DBS_REQUEST: 'GET_ORG_DBS_REQUEST',
+    GET_ORG_DBS_SUCCESS: 'GET_ORG_DBS_SUCCESS',
+    GET_ORG_DBS_FAILURE: 'GET_ORG_DBS_FAILURE',
+
+    GET_DB_COLLECTIONS_REQUEST: 'GET_DB_COLLECTIONS_REQUEST',
+    GET_DB_COLLECTIONS_SUCCESS: 'GET_DB_COLLECTIONS_SUCCESS',
+    GET_DB_COLLECTIONS_FAILURE: 'GET_DB_COLLECTIONS_FAILURE',
+
+    EXECUTE_MONGO_QUERY_REQUEST: 'EXECUTE_MONGO_QUERY_REQUEST',
+    EXECUTE_MONGO_QUERY_SUCCESS: 'EXECUTE_MONGO_QUERY_SUCCESS',
+    EXECUTE_MONGO_QUERY_FAILURE: 'EXECUTE_MONGO_QUERY_FAILURE',
+    RESET_MONGO_QUERY: 'RESET_MONGO_QUERY',
+
+    GET_MONGO_SCHEMA_REQUEST: 'GET_MONGO_SCHEMA_REQUEST',
+    GET_MONGO_SCHEMA_SUCCESS: 'GET_MONGO_SCHEMA_SUCCESS',
+    GET_MONGO_SCHEMA_FAILURE: 'GET_MONGO_SCHEMA_FAILURE',
+    CLEAR_MONGO_SCHEMA: 'CLEAR_MONGO_SCHEMA',
+  },
+  { prefix: CURRENT_APP_NAME, scope },
+);
