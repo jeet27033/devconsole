@@ -6,14 +6,14 @@ let pool: mysql.Pool | null = null;
 
 export const connectMySQL = async (): Promise<void> => {
   logger.info('Connecting to MySQL...');
-  logger.info(`MySQL URI: ${config.MYSQL_META_HOST}:${config.MYSQL_META_PORT}`);
+  logger.info(`MySQL URI: ${config.MYSQL_META_HOST}:3306`);
   try {
     pool = mysql.createPool({
       host: config.MYSQL_META_HOST,
-      port: config.MYSQL_META_PORT,
+      port: 3306,
       user: config.MYSQL_META_USERNAME,
       password: config.MYSQL_META_PASSWORD,
-      database: config.MYSQL_META_DATABASE,
+      database: 'api_testing',
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
