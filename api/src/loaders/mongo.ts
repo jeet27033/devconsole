@@ -5,8 +5,8 @@ import logger from '../helpers/logger';
 export const connectMongo = async (): Promise<void> => {
   try {
     logger.info('Connecting to MongoDB...');
-    logger.info(`MongoDB URI: ${config.MONGO_URI}`);
-    await mongoose.connect(config.MONGO_URI, {
+    logger.info(`MongoDB URI: ${config.MONGO_META_URI}`);
+    await mongoose.connect(config.MONGO_META_URI, {
       maxPoolSize: config.MONGO_POOL_SIZE,
     });
 

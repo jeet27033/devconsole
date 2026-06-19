@@ -3,6 +3,7 @@ import { Router } from 'express';
 import testRoute from './testRoute';
 import extensionsRoute from './extensions';
 import configManagementRoute from './configManagement';
+import newrelicAlertsRoute from './newrelic-alerts';
 
 declare global {
   namespace Express {
@@ -17,5 +18,6 @@ const router = Router();
 testRoute(router);
 extensionsRoute(router);
 configManagementRoute(router);
+newrelicAlertsRoute(router);
 
 export default router;

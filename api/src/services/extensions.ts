@@ -610,8 +610,8 @@ export const fetchOrgDBs = (orgId: number, extendedDbEnv: string = process.env.E
 }
 
 const getMongoSlaveUri = () => {
-  const uri = config.MONGO_EXTENSIONS_CONN_STR;
-  if (!uri) throw new Error('MONGO_EXTENSIONS_CONN_STR is not configured');
+  const uri = config.MONGO_EXTENSIONS_URI;
+  if (!uri) throw new Error('MONGO_EXTENSIONS_URI is not configured');
   return uri.includes('?') ? uri : `${uri}?replicaSet=rs0&serverSelectionTimeoutMS=40000`;
 };
 

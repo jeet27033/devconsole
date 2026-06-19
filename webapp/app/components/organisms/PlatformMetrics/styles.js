@@ -22,27 +22,43 @@ export default css`
     padding: ${CAP_SPACE_12} ${CAP_SPACE_24};
   }
 
+  /* ── Control panel ─────────────────────────────────────────────────────── */
+
   .control-panel {
     display: flex;
-    align-items: center;
-    gap: ${CAP_SPACE_08};
+    align-items: flex-end;
+    gap: ${CAP_SPACE_16};
     margin-bottom: ${CAP_SPACE_16};
   }
 
-  .control-panel .duration-select,
-  .control-panel.reloadMatrix,
+  .control-item {
+    display: flex;
+    flex-direction: column;
+    gap: ${CAP_SPACE_04};
+  }
+
+  .control-label {
+    font-size: ${FONT_SIZE_S};
+    font-weight: ${FONT_WEIGHT_MEDIUM};
+    color: ${FONT_COLOR_02};
+  }
+
+  .control-panel .cap-select,
   .control-panel .product-select,
-  .control-panel .dashboard-select {
+  .control-panel .dashboard-select,
+  .control-panel .duration-select {
     min-width: 12rem;
   }
 
   .reloadMatrix {
     cursor: pointer;
-    margin-right: ${CAP_SPACE_08};
     padding: ${CAP_SPACE_04};
     border-radius: 0.25rem;
     color: ${FONT_COLOR_02};
-    transition: color 0.2s, background-color 0.2s, transform 0.3s;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s, background-color 0.2s, transform 0.4s ease;
+    margin-bottom: 0.25rem;
   }
 
   .reloadMatrix:hover {
@@ -51,9 +67,32 @@ export default css`
     transform: rotate(90deg);
   }
 
-  .reloadMatrix:active {
-    transform: rotate(360deg);
+  /* ── Filter bar ────────────────────────────────────────────────────────── */
+
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: ${CAP_SPACE_08};
+    margin-bottom: ${CAP_SPACE_16};
+    background: ${CAP_G09};
+    border: 0.0625rem solid ${CAP_G20};
+    border-radius: 0.375rem;
+    padding: ${CAP_SPACE_08} ${CAP_SPACE_12};
   }
+
+  .filter-bar .filter-label {
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_02};
+    font-weight: ${FONT_WEIGHT_MEDIUM};
+    white-space: nowrap;
+  }
+
+  .filter-bar .filter-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ── Dashboard tabs ────────────────────────────────────────────────────── */
 
   .dashboard-tabs {
     display: flex;
@@ -64,7 +103,7 @@ export default css`
   }
 
   .dashboard-tab {
-    padding: ${CAP_SPACE_04} ${CAP_SPACE_16};
+    padding: ${CAP_SPACE_08} ${CAP_SPACE_16};
     border: none;
     background: transparent;
     cursor: pointer;
@@ -77,13 +116,17 @@ export default css`
 
   .dashboard-tab:hover {
     color: ${FONT_COLOR_01};
+    background: ${CAP_G09};
   }
 
   .dashboard-tab.active {
     font-weight: ${FONT_WEIGHT_MEDIUM};
     color: ${FONT_COLOR_01};
     border-bottom: 0.125rem solid ${FONT_COLOR_01};
+    background: ${CAP_G09};
   }
+
+  /* ── Chart grid ────────────────────────────────────────────────────────── */
 
   .dashboard-grid {
     display: grid;
@@ -109,6 +152,11 @@ export default css`
     border-radius: 0.375rem;
     overflow: hidden;
     grid-column: span 2;
+    transition: box-shadow 0.15s;
+  }
+
+  .chart-card:hover {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08);
   }
 
   .chart-card.scaler {
@@ -124,12 +172,38 @@ export default css`
   }
 
   .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: ${CAP_SPACE_04} ${CAP_SPACE_12};
     border-bottom: 0.0625rem solid ${CAP_G20};
     font-size: ${FONT_SIZE_S};
     font-weight: ${FONT_WEIGHT_MEDIUM};
     color: ${FONT_COLOR_02};
     background: ${CAP_G09};
+  }
+
+  .chart-header-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chart-refresh-btn {
+    cursor: pointer;
+    padding: 0.125rem;
+    border-radius: 0.25rem;
+    color: ${FONT_COLOR_02};
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, transform 0.4s ease;
+    flex-shrink: 0;
+  }
+
+  .chart-refresh-btn:hover {
+    color: ${FONT_COLOR_01};
+    transform: rotate(90deg);
   }
 
   .chart-body {
@@ -140,11 +214,12 @@ export default css`
   }
 
   .chart-body.scaler-body {
-    padding: ${CAP_SPACE_12};
-    min-height: auto;
+    padding: ${CAP_SPACE_16};
+    min-height: 5rem;
   }
 
   .chart-body.line-body {
+    padding: ${CAP_SPACE_08} 0;
     min-height: 14rem;
   }
 
@@ -154,14 +229,15 @@ export default css`
   }
 
   .scaler-value {
-    font-size: 1.75rem;
+    font-size: 2rem;
     font-weight: 700;
     color: ${FONT_COLOR_01};
     text-align: center;
+    line-height: 1.2;
   }
 
   .scaler-unit {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 400;
     color: ${FONT_COLOR_02};
     margin-left: ${CAP_SPACE_04};
@@ -180,6 +256,8 @@ export default css`
     font-weight: ${FONT_WEIGHT_MEDIUM};
     color: ${FONT_COLOR_02};
     border-bottom: 0.0625rem solid ${CAP_G20};
+    position: sticky;
+    top: 0;
   }
 
   .metrics-table td {
@@ -189,20 +267,47 @@ export default css`
     border-bottom: 0.0625rem solid ${CAP_G20};
   }
 
+  .metrics-table tr:last-child td {
+    border-bottom: none;
+  }
+
   .metrics-table tr:hover td {
     background: ${CAP_G09};
   }
 
+  /* ── Empty / no-data states ────────────────────────────────────────────── */
+
   .empty-state {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 18.75rem;
+    gap: ${CAP_SPACE_12};
     color: ${FONT_COLOR_02};
     font-size: ${FONT_SIZE_M};
   }
 
-  .filter-container {
-    margin-bottom: ${CAP_SPACE_16};
+  .no-data-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: ${CAP_SPACE_24};
+    gap: ${CAP_SPACE_08};
+    color: ${FONT_COLOR_02};
+    font-size: ${FONT_SIZE_S};
+    min-height: 6rem;
+  }
+
+  .no-data-icon {
+    color: #d97706;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .no-data-label {
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_02};
   }
 `;

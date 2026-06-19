@@ -23,4 +23,8 @@ export default defineMessages({
     id: `${scope}.loading`,
     defaultMessage: 'Loading metrics...',
   },
+  filterApis: {
+    id: `${scope}.filterApis`,
+    defaultMessage: 'Filter APIs',
+  },
 });

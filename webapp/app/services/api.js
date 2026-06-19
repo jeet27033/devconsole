@@ -205,3 +205,80 @@ export const saveBugsnagConfig = async (body) => {
   const url = `${endpoints.devconsole_endpoint}/extensions/bugsnag/config`;
   return httpRequest(url, getVulcanAPICallObject('POST', body));
 };
+
+// ── NewRelic Alert Management ──────────────────────────────────────────────────
+
+export const getNewRelicPlatforms = async () => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/platforms`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getNewRelicFormMeta = async () => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/form-meta`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getNewRelicSettings = async () => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/settings`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const updateNewRelicSettings = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/settings`;
+  return httpRequest(url, getVulcanAPICallObject('PUT', body));
+};
+
+export const getNewRelicConditions = async (query = '') => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/conditions${query}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getNewRelicConditionDetails = async (id) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/conditions/${id}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const createNewRelicCondition = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/conditions`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const updateNewRelicCondition = async (id, body) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/conditions/${id}`;
+  return httpRequest(url, getVulcanAPICallObject('PUT', body));
+};
+
+export const newRelicConditionAction = async (id, body) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/conditions/${id}/action`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const getNewRelicIssues = async (query = '') => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/issues${query}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const newRelicIssueAction = async (id, body) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/issues/${id}/action`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const getNewRelicMetricProducts = async () => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/metric-products`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getNewRelicMetricDashboards = async (product) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/metric-dashboards?product=${encodeURIComponent(product)}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getNewRelicDashboardPages = async (guid) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/dashboard-pages?guid=${encodeURIComponent(guid)}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const executeNewRelicNrql = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/newrelic/nrql`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};

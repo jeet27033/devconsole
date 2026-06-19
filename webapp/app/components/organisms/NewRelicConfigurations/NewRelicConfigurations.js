@@ -25,6 +25,16 @@ import {
   TIME_UNITS,
   DEFAULT_THRESHOLD,
 } from './constants';
+import {
+  getNewRelicPlatforms,
+  getNewRelicFormMeta,
+  getNewRelicSettings,
+  updateNewRelicSettings,
+  getNewRelicConditions,
+  createNewRelicCondition,
+  updateNewRelicCondition,
+  newRelicConditionAction,
+} from '../../../services/api';
 
 const { TextArea } = CapInput;
 
@@ -33,43 +43,25 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
   const [statusFilter, setStatusFilter] = useState(DEFAULT_STATUS);
   const [platformFilter, setPlatformFilter] = useState('');
   const [signalFilter, setSignalFilter] = useState('');
-  const [platforms, setPlatforms] = useState([
-    { value: '', label: 'All' },
-    { value: 'Loyalty Engine', label: 'Loyalty Engine' },
-    { value: 'Campaign Manager', label: 'Campaign Manager' },
-    { value: 'Engage+', label: 'Engage+' },
-    { value: 'Insights+', label: 'Insights+' },
-  ]);
-  const [signals, setSignals] = useState([
-    { value: '', label: 'All' },
-    { value: 'Error Rate', label: 'Error Rate' },
-    { value: 'Latency', label: 'Latency' },
-    { value: 'Throughput', label: 'Throughput' },
-    { value: 'Apdex', label: 'Apdex' },
-  ]);
-  const [conditions, setConditions] = useState([
-    { id: 'cond-001', conditionName: 'High Error Rate - Points API', status: 'Active', platform: 'Loyalty Engine', appName: 'loyalty-engine-sg', metric: 'Error percentage', signal: 'Error Rate', filteredApis: '/api/v2/loyalty/points/*', thresholds: [{ priority: 'Critical', operator: 'Above', value: '5%' }, { priority: 'Warning', operator: 'Above', value: '2%' }], lastModified: '2026-04-12', modifiedBy: 'jeet.patel' },
-    { id: 'cond-002', conditionName: 'Latency P95 Threshold - Member Lookup', status: 'Active', platform: 'Loyalty Engine', appName: 'loyalty-engine-sg', metric: 'Response time (P95)', signal: 'Latency', filteredApis: '/api/v2/members/lookup', thresholds: [{ priority: 'Critical', operator: 'Above', value: '500ms' }], lastModified: '2026-04-11', modifiedBy: 'dev.ops' },
-    { id: 'cond-003', conditionName: 'Transaction Processing Timeout', status: 'Active', platform: 'Campaign Manager', appName: 'campaign-manager-sg', metric: 'Response time (P99)', signal: 'Latency', filteredApis: '/api/v2/transactions/*', thresholds: [{ priority: 'Critical', operator: 'Above', value: '3000ms' }, { priority: 'Warning', operator: 'Above', value: '1500ms' }], lastModified: '2026-04-10', modifiedBy: 'admin.user' },
-    { id: 'cond-004', conditionName: 'Coupon Validation 4xx Rate', status: 'Active', platform: 'Engage+', appName: 'engage-plus-sg', metric: 'HTTP 4xx error rate', signal: 'Error Rate', filteredApis: '/api/v2/coupons/validate', thresholds: [{ priority: 'Warning', operator: 'Above', value: '10%' }], lastModified: '2026-04-09', modifiedBy: 'jeet.patel' },
-    { id: 'cond-005', conditionName: 'Low Throughput Alert', status: 'Disabled', platform: 'Loyalty Engine', appName: 'loyalty-engine-sg', metric: 'Throughput (rpm)', signal: 'Throughput', filteredApis: null, thresholds: [{ priority: 'Warning', operator: 'Below', value: '100 rpm' }], lastModified: '2026-04-08', modifiedBy: 'dev.ops' },
-    { id: 'cond-006', conditionName: 'Apdex Score Drop - Insights', status: 'Active', platform: 'Insights+', appName: 'insights-plus-sg', metric: 'Apdex score', signal: 'Apdex', filteredApis: null, thresholds: [{ priority: 'Critical', operator: 'Below', value: '0.7' }, { priority: 'Warning', operator: 'Below', value: '0.85' }], lastModified: '2026-04-07', modifiedBy: 'admin.user' },
-    { id: 'cond-007', conditionName: 'Gateway 5xx Spike', status: 'Active', platform: 'Campaign Manager', appName: 'campaign-manager-sg', metric: 'HTTP 5xx error count', signal: 'Error Rate', filteredApis: null, thresholds: [{ priority: 'Critical', operator: 'Above', value: '50' }], lastModified: '2026-04-06', modifiedBy: 'jeet.patel' },
-    { id: 'cond-008', conditionName: 'Notification Delivery Latency', status: 'Disabled', platform: 'Engage+', appName: 'engage-plus-sg', metric: 'Response time (P95)', signal: 'Latency', filteredApis: '/api/v2/notifications/*', thresholds: [{ priority: 'Warning', operator: 'Above', value: '2000ms' }], lastModified: '2026-04-05', modifiedBy: 'dev.ops' },
-  ]);
+  const [platforms, setPlatforms] = useState([{ value: '', label: 'All' }]);
+  const [signals, setSignals] = useState([{ value: '', label: 'All' }]);
+  const [metrics, setMetrics] = useState([]);
+  const [conditions, setConditions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [editingCondition, setEditingCondition] = useState(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState('');
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [conditionToDelete, setConditionToDelete] = useState(null);
   const menuRef = useRef(null);
 
   // Form state
   const [conditionName, setConditionName] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('');
   const [selectedMetric, setSelectedMetric] = useState('');
-  const [metrics, setMetrics] = useState([]);
   const [filterScopeEnabled, setFilterScopeEnabled] = useState(false);
   const [filterApis, setFilterApis] = useState([]);
   const [thresholds, setThresholds] = useState([{ ...DEFAULT_THRESHOLD }]);
@@ -77,37 +69,76 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationDesc, setNotificationDesc] = useState('');
 
-  // Close action menu on outside click
+  // ── Data fetching ──────────────────────────────────────────────────────────
+
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const [platformsRes, metaRes, settingsRes] = await Promise.allSettled([
+        getNewRelicPlatforms(),
+        getNewRelicFormMeta(),
+        getNewRelicSettings(),
+      ]);
+
+      if (platformsRes.status === 'fulfilled') {
+        const data = platformsRes.value?.data?.data ?? platformsRes.value?.data ?? [];
+        setPlatforms([{ value: '', label: 'All' }, ...data.map((p) => ({ value: p.id, label: p.label }))]);
+      }
+
+      if (metaRes.status === 'fulfilled') {
+        const data = metaRes.value?.data?.data ?? metaRes.value?.data ?? {};
+        const metricList = data.metrics ?? [];
+        setMetrics(metricList.map((m) => ({ value: m.id, label: m.label })));
+        setSignals([{ value: '', label: 'All' }, ...metricList.map((m) => ({ value: m.id, label: m.label }))]);
+      }
+
+      if (settingsRes.status === 'fulfilled') {
+        const data = settingsRes.value?.data?.data ?? settingsRes.value?.data ?? {};
+        setWebhookUrl(data.slack_webhook_url ?? '');
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const fetchConditions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter) params.set('status', statusFilter);
+      if (platformFilter) params.set('platform', platformFilter);
+      if (searchQuery) params.set('search', searchQuery);
+      if (signalFilter) params.set('signal', signalFilter);
+      const qs = params.toString();
+      const res = await getNewRelicConditions(qs ? `?${qs}` : '');
+      setConditions(res?.data?.data ?? res?.data ?? []);
+    } catch (e) {
+      setConditions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, platformFilter, searchQuery, signalFilter]);
+
+  useEffect(() => { fetchInitialData(); }, []);
+  useEffect(() => { fetchConditions(); }, [statusFilter, platformFilter, signalFilter]);
+
   useEffect(() => {
     if (!openMenuId) return;
     const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpenMenuId(null);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuId(null);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [openMenuId]);
 
+  // ── Filtering (local search) ───────────────────────────────────────────────
+
   const filteredConditions = useMemo(() => {
-    let result = conditions;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((c) =>
-        c.conditionName?.toLowerCase().includes(q),
-      );
-    }
-    if (statusFilter) {
-      result = result.filter((c) => c.status === statusFilter);
-    }
-    if (platformFilter) {
-      result = result.filter((c) => c.platform === platformFilter);
-    }
-    if (signalFilter) {
-      result = result.filter((c) => c.signal === signalFilter);
-    }
-    return result;
-  }, [conditions, searchQuery, statusFilter, platformFilter, signalFilter]);
+    if (!searchQuery) return conditions;
+    const q = searchQuery.toLowerCase();
+    return conditions.filter((c) => c.conditionName?.toLowerCase().includes(q));
+  }, [conditions, searchQuery]);
+
+  // ── Form helpers ───────────────────────────────────────────────────────────
 
   const resetForm = useCallback(() => {
     setConditionName('');
@@ -131,25 +162,46 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
     setEditingCondition(condition);
     setConditionName(condition.conditionName || '');
     setSelectedPlatform(condition.platform || '');
-    setSelectedMetric(condition.metric || '');
-    setThresholds(
-      condition.thresholds?.length
-        ? condition.thresholds
-        : [{ ...DEFAULT_THRESHOLD }],
-    );
+    setSelectedMetric(condition.metricId || '');
+    setFilterApis(condition.filteredApis || []);
+    setFilterScopeEnabled((condition.filteredApis || []).length > 0);
+    setThresholds(condition.thresholds?.length ? condition.thresholds : [{ ...DEFAULT_THRESHOLD }]);
+    setNotificationTitle(condition.notificationTitle || '');
+    setNotificationDesc(condition.notificationDesc || '');
+    setShowNotification(!!(condition.notificationTitle || condition.notificationDesc));
     setSidePanelOpen(true);
     setOpenMenuId(null);
   }, []);
 
-  const handleDeleteCondition = useCallback((conditionId) => {
-    // API call placeholder: DELETE alert-management/backend/account/{accountId}/conditions/{conditionId}/delete
+  const handleToggleConditionStatus = useCallback(async (condition) => {
+    setOpenMenuId(null);
+    const action = condition.status === 'Active' ? 'disable' : 'enable';
+    try {
+      await newRelicConditionAction(condition.id, { action });
+      setConditions((prev) =>
+        prev.map((c) =>
+          c.id === condition.id ? { ...c, status: action === 'enable' ? 'Active' : 'Disabled' } : c,
+        ),
+      );
+    } catch (e) { /* ignore */ }
+  }, []);
+
+  const handleShowDeleteModal = useCallback((condition) => {
+    setConditionToDelete(condition);
+    setDeleteModalVisible(true);
     setOpenMenuId(null);
   }, []);
 
-  const handleToggleConditionStatus = useCallback((condition) => {
-    // API call placeholder: POST alert-management/backend/account/{accountId}/conditions/{conditionId}/action
-    setOpenMenuId(null);
-  }, []);
+  const handleDeleteCondition = useCallback(async () => {
+    if (!conditionToDelete) return;
+    try {
+      await newRelicConditionAction(conditionToDelete.id, { action: 'delete' });
+      setConditions((prev) => prev.filter((c) => c.id !== conditionToDelete.id));
+    } catch (e) { /* ignore */ } finally {
+      setDeleteModalVisible(false);
+      setConditionToDelete(null);
+    }
+  }, [conditionToDelete]);
 
   const handleAddThreshold = useCallback(() => {
     setThresholds((prev) => [...prev, { ...DEFAULT_THRESHOLD }]);
@@ -160,21 +212,48 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
   }, []);
 
   const handleThresholdChange = useCallback((index, field, value) => {
-    setThresholds((prev) =>
-      prev.map((t, i) => (i === index ? { ...t, [field]: value } : t)),
-    );
+    setThresholds((prev) => prev.map((t, i) => (i === index ? { ...t, [field]: value } : t)));
   }, []);
 
-  const handleSubmit = useCallback(() => {
-    // API call placeholder: POST/PUT alert condition
-    setSidePanelOpen(false);
-    resetForm();
-  }, [conditionName, selectedPlatform, selectedMetric, thresholds, resetForm]);
+  const handleSubmit = useCallback(async () => {
+    setSubmitting(true);
+    const payload = {
+      conditionName,
+      platform: selectedPlatform,
+      metricId: selectedMetric,
+      filterApis: filterScopeEnabled ? filterApis : [],
+      thresholds,
+      notificationTitle: showNotification ? notificationTitle : null,
+      notificationDesc: showNotification ? notificationDesc : null,
+    };
+    try {
+      if (editingCondition) {
+        await updateNewRelicCondition(editingCondition.id, payload);
+      } else {
+        await createNewRelicCondition(payload);
+      }
+      await fetchConditions();
+      setSidePanelOpen(false);
+      resetForm();
+    } catch (e) { /* ignore */ } finally {
+      setSubmitting(false);
+    }
+  }, [conditionName, selectedPlatform, selectedMetric, filterScopeEnabled, filterApis,
+    thresholds, showNotification, notificationTitle, notificationDesc, editingCondition,
+    fetchConditions, resetForm]);
 
-  const handleSaveSettings = useCallback(() => {
-    // API call placeholder: POST alert-management/backend/settings/update
-    setSettingsVisible(false);
+  const handleSaveSettings = useCallback(async () => {
+    try {
+      await updateNewRelicSettings({ slack_webhook_url: webhookUrl });
+    } catch (e) { /* ignore */ } finally {
+      setSettingsVisible(false);
+    }
   }, [webhookUrl]);
+
+  const isFormValid = conditionName.length >= 10 && conditionName.length <= 50 && selectedPlatform && selectedMetric;
+
+  const formatThresholds = (thrList) =>
+    (thrList || []).map((t) => `${t.priority}: ${t.operator} ${t.value}`).join(', ');
 
   return (
     <CapRow className={`${className} newrelic-configurations`}>
@@ -187,40 +266,23 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
               value={searchQuery}
               placeholder={formatMessage(messages.searchPlaceholder)}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onPressEnter={fetchConditions}
             />
           </div>
           <div className="filter-field">
             <span className="filter-label">{formatMessage(messages.platform)}</span>
-            <CapSelect
-              className="platform-select"
-              options={platforms}
-              value={platformFilter}
-              onChange={setPlatformFilter}
-            />
+            <CapSelect className="platform-select" options={platforms} value={platformFilter} onChange={setPlatformFilter} />
           </div>
           <div className="filter-field">
             <span className="filter-label">{formatMessage(messages.signal)}</span>
-            <CapSelect
-              className="filter-select"
-              options={signals}
-              value={signalFilter}
-              onChange={setSignalFilter}
-            />
+            <CapSelect className="filter-select" options={signals} value={signalFilter} onChange={setSignalFilter} />
           </div>
           <div className="filter-field">
             <span className="filter-label">{formatMessage(messages.status)}</span>
-            <CapSelect
-              className="filter-select"
-              options={STATUS_OPTIONS}
-              value={statusFilter}
-              onChange={setStatusFilter}
-            />
+            <CapSelect className="filter-select" options={STATUS_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
           </div>
           <div className="filters-right">
-            <button
-              className="settings-btn"
-              onClick={() => setSettingsVisible(true)}
-            >
+            <button className="settings-btn" onClick={() => setSettingsVisible(true)}>
               <CapIcon type="setting" />
             </button>
             <CapButton type="primary" onClick={handleOpenNewCondition}>
@@ -237,17 +299,9 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
               <thead>
                 <tr>
                   {CONDITION_TABLE_COLUMNS.map((col) => (
-                    <th
-                      key={col.dataIndex}
-                      style={{
-                        width: col.width,
-                        textAlign: col.align || 'left',
-                      }}
-                    >
+                    <th key={col.dataIndex} style={{ width: col.width, textAlign: col.align || 'left' }}>
                       <div>{col.title}</div>
-                      {col.subTitle && (
-                        <div className="sub-header">{col.subTitle}</div>
-                      )}
+                      {col.subTitle && <div className="sub-header">{col.subTitle}</div>}
                     </th>
                   ))}
                 </tr>
@@ -256,9 +310,7 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
                 {filteredConditions.length === 0 ? (
                   <tr>
                     <td colSpan={CONDITION_TABLE_COLUMNS.length}>
-                      <div className="empty-state">
-                        {formatMessage(messages.noConditions)}
-                      </div>
+                      <div className="empty-state">{formatMessage(messages.noConditions)}</div>
                     </td>
                   </tr>
                 ) : (
@@ -268,89 +320,49 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
                         <div className="condition-name-cell">
                           <span>{cond.conditionName}</span>
                           <div className="condition-status">
-                            <span
-                              className={`status-dot ${cond.status === 'Active' ? 'active' : 'disabled'}`}
-                            />
+                            <span className={`status-dot ${cond.status === 'Active' ? 'active' : 'disabled'}`} />
                             {cond.status}
                           </div>
                         </div>
                       </td>
                       <td>
                         <div>{cond.platform}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                          {cond.appName}
-                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{cond.appName}</div>
                       </td>
                       <td>
                         <div>{cond.metric}</div>
-                        {cond.filteredApis && (
-                          <div
-                            style={{ fontSize: '0.75rem', color: '#6B7280' }}
-                          >
-                            {cond.filteredApis}
-                          </div>
+                        {cond.filteredApis?.length > 0 && (
+                          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{cond.filteredApis.join(', ')}</div>
                         )}
                       </td>
                       <td>
                         <div className="threshold-cell">
                           {(cond.thresholds || []).map((t, i) => (
-                            <span
-                              key={i}
-                              className={`threshold-badge ${t.priority?.toLowerCase()}`}
-                            >
+                            <span key={i} className={`threshold-badge ${t.priority?.toLowerCase()}`}>
                               {t.priority}: {t.operator} {t.value}
                             </span>
                           ))}
                         </div>
                       </td>
                       <td>
-                        <div>{cond.lastModified}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                          {cond.modifiedBy}
-                        </div>
+                        <div>{cond.lastModified ? new Date(cond.lastModified).toLocaleDateString() : '-'}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{cond.modifiedBy}</div>
                       </td>
-                      <td
-                        style={{
-                          textAlign: 'center',
-                          position: 'relative',
-                        }}
-                      >
-                        <button
-                          className="action-btn"
-                          onClick={() =>
-                            setOpenMenuId(
-                              openMenuId === cond.id ? null : cond.id,
-                            )
-                          }
-                        >
+                      <td style={{ textAlign: 'center', position: 'relative' }}>
+                        <button className="action-btn" onClick={() => setOpenMenuId(openMenuId === cond.id ? null : cond.id)}>
                           <CapIcon type="more" />
                         </button>
                         {openMenuId === cond.id && (
                           <div className="action-menu" ref={menuRef}>
-                            <button
-                              className="action-menu-item"
-                              onClick={() => handleEditCondition(cond)}
-                            >
+                            <button className="action-menu-item" onClick={() => handleEditCondition(cond)}>
                               <CapIcon type="edit" />
                               {formatMessage(messages.editCondition)}
                             </button>
-                            <button
-                              className="action-menu-item"
-                              onClick={() =>
-                                handleToggleConditionStatus(cond)
-                              }
-                            >
+                            <button className="action-menu-item" onClick={() => handleToggleConditionStatus(cond)}>
                               <CapIcon type="poweroff" />
-                              {cond.status === 'Active'
-                                ? formatMessage(messages.disableCondition)
-                                : formatMessage(messages.enableCondition)}
+                              {cond.status === 'Active' ? formatMessage(messages.disableCondition) : formatMessage(messages.enableCondition)}
                             </button>
-                            <button
-                              className="action-menu-item danger"
-                              onClick={() =>
-                                handleDeleteCondition(cond.id)
-                              }
-                            >
+                            <button className="action-menu-item danger" onClick={() => handleShowDeleteModal(cond)}>
                               <CapIcon type="delete" />
                               {formatMessage(messages.deleteCondition)}
                             </button>
@@ -368,27 +380,11 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
         {/* Side Panel for Create/Edit */}
         {sidePanelOpen && (
           <>
-            <div
-              className="side-panel-backdrop"
-              onClick={() => {
-                setSidePanelOpen(false);
-                resetForm();
-              }}
-            />
+            <div className="side-panel-backdrop" onClick={() => { setSidePanelOpen(false); resetForm(); }} />
             <div className="side-panel">
               <div className="side-panel-header">
-                <h3>
-                  {editingCondition
-                    ? formatMessage(messages.editCondition)
-                    : formatMessage(messages.newAlertCondition)}
-                </h3>
-                <button
-                  className="close-btn"
-                  onClick={() => {
-                    setSidePanelOpen(false);
-                    resetForm();
-                  }}
-                >
+                <h3>{editingCondition ? formatMessage(messages.editCondition) : formatMessage(messages.newAlertCondition)}</h3>
+                <button className="close-btn" onClick={() => { setSidePanelOpen(false); resetForm(); }}>
                   <CapIcon type="close" />
                 </button>
               </div>
@@ -398,18 +394,19 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
                 <div className="form-step">
                   <div className="step-header">
                     <div className="step-number">1</div>
-                    <span className="step-title">
-                      {formatMessage(messages.conditionName)}
-                    </span>
+                    <span className="step-title">{formatMessage(messages.conditionName)}</span>
                   </div>
                   <div className="step-content">
                     <CapInput
                       value={conditionName}
-                      placeholder={formatMessage(
-                        messages.conditionNamePlaceholder,
-                      )}
+                      placeholder={formatMessage(messages.conditionNamePlaceholder)}
                       onChange={(e) => setConditionName(e.target.value)}
                     />
+                    {conditionName.length > 0 && (conditionName.length < 10 || conditionName.length > 50) && (
+                      <div style={{ color: '#EA213A', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                        Name must be 10–50 characters
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -417,23 +414,15 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
                 <div className="form-step">
                   <div className="step-header">
                     <div className="step-number">2</div>
-                    <span className="step-title">
-                      {formatMessage(messages.defineConditions)}
-                    </span>
+                    <span className="step-title">{formatMessage(messages.defineConditions)}</span>
                   </div>
                   <div className="step-content">
                     <div className="form-field">
-                      <label>
-                        {formatMessage(messages.selectPlatform)}
-                      </label>
+                      <label>{formatMessage(messages.selectPlatform)}</label>
                       <CapSelect
-                        options={platforms}
+                        options={platforms.filter((p) => p.value)}
                         value={selectedPlatform}
-                        onChange={(val) => {
-                          setSelectedPlatform(val);
-                          setSelectedMetric('');
-                          // API call placeholder: fetch metrics for platform
-                        }}
+                        onChange={(val) => { setSelectedPlatform(val); setSelectedMetric(''); }}
                         style={{ width: '100%' }}
                       />
                     </div>
@@ -452,24 +441,17 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
                         <input
                           type="checkbox"
                           checked={filterScopeEnabled}
-                          onChange={(e) =>
-                            setFilterScopeEnabled(e.target.checked)
-                          }
+                          onChange={(e) => setFilterScopeEnabled(e.target.checked)}
                         />
-                        <label style={{ marginBottom: 0 }}>
-                          {formatMessage(messages.filterScope)}
-                        </label>
+                        <label style={{ marginBottom: 0 }}>{formatMessage(messages.filterScope)}</label>
                       </div>
                       {filterScopeEnabled && (
                         <div style={{ marginTop: '0.5rem' }}>
                           <CapSelect
-                            mode="multiple"
-                            options={[]}
+                            mode="tags"
                             value={filterApis}
                             onChange={setFilterApis}
-                            placeholder={formatMessage(
-                              messages.filterByApis,
-                            )}
+                            placeholder={formatMessage(messages.filterByApis)}
                             style={{ width: '100%' }}
                           />
                         </div>
@@ -482,9 +464,7 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
                 <div className="form-step">
                   <div className="step-header">
                     <div className="step-number">3</div>
-                    <span className="step-title">
-                      {formatMessage(messages.setThresholds)}
-                    </span>
+                    <span className="step-title">{formatMessage(messages.setThresholds)}</span>
                   </div>
                   <div className="step-content">
                     {thresholds.map((threshold, index) => (
@@ -493,131 +473,78 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
                           <CapSelect
                             options={PRIORITY_LEVELS}
                             value={threshold.priority}
-                            onChange={(val) =>
-                              handleThresholdChange(index, 'priority', val)
-                            }
+                            onChange={(val) => handleThresholdChange(index, 'priority', val)}
                             style={{ width: '8rem' }}
                           />
                           <CapSelect
                             options={CONDITION_OPERATORS}
                             value={threshold.operator}
-                            onChange={(val) =>
-                              handleThresholdChange(index, 'operator', val)
-                            }
+                            onChange={(val) => handleThresholdChange(index, 'operator', val)}
                             style={{ width: '10rem' }}
                           />
                           <CapInput
                             type="number"
                             value={threshold.value}
                             placeholder="Value"
-                            onChange={(e) =>
-                              handleThresholdChange(
-                                index,
-                                'value',
-                                e.target.value,
-                              )
-                            }
+                            onChange={(e) => handleThresholdChange(index, 'value', e.target.value)}
                             style={{ width: '6rem' }}
                           />
                           <CapSelect
                             options={DURATION_TYPES}
                             value={threshold.durationType}
-                            onChange={(val) =>
-                              handleThresholdChange(
-                                index,
-                                'durationType',
-                                val,
-                              )
-                            }
+                            onChange={(val) => handleThresholdChange(index, 'durationType', val)}
                             style={{ width: '10rem' }}
                           />
                           <CapInput
                             type="number"
                             value={threshold.durationValue}
                             placeholder="Duration"
-                            onChange={(e) =>
-                              handleThresholdChange(
-                                index,
-                                'durationValue',
-                                e.target.value,
-                              )
-                            }
+                            onChange={(e) => handleThresholdChange(index, 'durationValue', e.target.value)}
                             style={{ width: '5rem' }}
                           />
                           <CapSelect
                             options={TIME_UNITS}
                             value={threshold.timeUnit}
-                            onChange={(val) =>
-                              handleThresholdChange(index, 'timeUnit', val)
-                            }
+                            onChange={(val) => handleThresholdChange(index, 'timeUnit', val)}
                             style={{ width: '7rem' }}
                           />
                           {thresholds.length > 1 && (
-                            <CapButton
-                              type="flat"
-                              onClick={() => handleRemoveThreshold(index)}
-                            >
+                            <CapButton type="flat" onClick={() => handleRemoveThreshold(index)}>
                               <CapIcon type="close" />
                             </CapButton>
                           )}
                         </div>
                       </div>
                     ))}
-                    <CapButton type="flat" onClick={handleAddThreshold}>
-                      + {formatMessage(messages.addThreshold)}
-                    </CapButton>
+                    {thresholds.length < 2 && (
+                      <CapButton type="flat" onClick={handleAddThreshold}>
+                        + {formatMessage(messages.addThreshold)}
+                      </CapButton>
+                    )}
                   </div>
                 </div>
 
-                {/* Step 4: Notification template (optional) */}
+                {/* Step 4: Notification template */}
                 <div className="form-step">
                   <div className="step-header">
                     <div className="step-number">4</div>
-                    <span className="step-title">
-                      {formatMessage(messages.customizeNotification)}
-                    </span>
-                    <CapButton
-                      type="flat"
-                      onClick={() => setShowNotification((p) => !p)}
-                    >
-                      <CapIcon
-                        type={showNotification ? 'chevron-up' : 'chevron-down'}
-                      />
+                    <span className="step-title">{formatMessage(messages.customizeNotification)}</span>
+                    <CapButton type="flat" onClick={() => setShowNotification((p) => !p)}>
+                      <CapIcon type={showNotification ? 'chevron-up' : 'chevron-down'} />
                     </CapButton>
                   </div>
                   {showNotification && (
                     <div className="step-content">
                       <div className="notification-section">
                         <div className="form-field">
-                          <label>
-                            {formatMessage(messages.notificationTitle)}
-                          </label>
-                          <CapInput
-                            value={notificationTitle}
-                            onChange={(e) =>
-                              setNotificationTitle(e.target.value)
-                            }
-                          />
+                          <label>{formatMessage(messages.notificationTitle)}</label>
+                          <CapInput value={notificationTitle} onChange={(e) => setNotificationTitle(e.target.value)} />
                         </div>
                         <div className="form-field">
-                          <label>
-                            {formatMessage(messages.notificationDescription)}
-                          </label>
-                          <TextArea
-                            rows={3}
-                            value={notificationDesc}
-                            onChange={(e) =>
-                              setNotificationDesc(e.target.value)
-                            }
-                          />
+                          <label>{formatMessage(messages.notificationDescription)}</label>
+                          <TextArea rows={3} value={notificationDesc} onChange={(e) => setNotificationDesc(e.target.value)} />
                         </div>
-                        <CapButton
-                          type="flat"
-                          onClick={() => {
-                            setNotificationTitle('');
-                            setNotificationDesc('');
-                          }}
-                        >
+                        <CapButton type="flat" onClick={() => { setNotificationTitle(''); setNotificationDesc(''); }}>
                           {formatMessage(messages.resetTemplate)}
                         </CapButton>
                       </div>
@@ -627,32 +554,28 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
               </div>
 
               <div className="side-panel-footer">
-                <CapButton
-                  type="primary"
-                  onClick={handleSubmit}
-                  disabled={
-                    conditionName.length < 10 ||
-                    conditionName.length > 50 ||
-                    !selectedPlatform ||
-                    !selectedMetric
-                  }
-                >
-                  {editingCondition
-                    ? formatMessage(messages.update)
-                    : formatMessage(messages.create)}
+                <CapButton type="primary" onClick={handleSubmit} disabled={!isFormValid || submitting} loading={submitting}>
+                  {editingCondition ? formatMessage(messages.update) : formatMessage(messages.create)}
                 </CapButton>
-                <CapButton
-                  onClick={() => {
-                    setSidePanelOpen(false);
-                    resetForm();
-                  }}
-                >
+                <CapButton onClick={() => { setSidePanelOpen(false); resetForm(); }}>
                   {formatMessage(messages.cancel)}
                 </CapButton>
               </div>
             </div>
           </>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <CustomModal
+          title={formatMessage(messages.deleteCondition)}
+          visible={deleteModalVisible}
+          onOk={handleDeleteCondition}
+          onCancel={() => { setDeleteModalVisible(false); setConditionToDelete(null); }}
+          okText={formatMessage(messages.deleteCondition)}
+          cancelText={formatMessage(messages.cancel)}
+        >
+          <p>Are you sure you want to delete <strong>{conditionToDelete?.conditionName}</strong>? This action cannot be undone.</p>
+        </CustomModal>
 
         {/* Settings Modal */}
         <CustomModal
