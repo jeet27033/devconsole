@@ -29,8 +29,20 @@ export default css`
     display: flex;
     flex-wrap: wrap;
     gap: ${CAP_SPACE_12};
-    align-items: center;
+    align-items: flex-end;
     margin-bottom: ${CAP_SPACE_16};
+  }
+
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .filter-label {
+    font-size: ${FONT_SIZE_S};
+    font-weight: 500;
+    color: ${FONT_COLOR_02};
   }
 
   .filters-section .search-input {

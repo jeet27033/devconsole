@@ -29,6 +29,18 @@ export default css`
     float: left;
   }
 
+  .toolbar-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .toolbar-label {
+    font-size: ${FONT_SIZE_S};
+    font-weight: 500;
+    color: ${FONT_COLOR_02};
+  }
+
   .app-select {
     min-width: 12rem;
   }
@@ -71,11 +83,34 @@ export default css`
       background: ${CAP_G20};
       font-weight: 600;
     }
+
     .ant-table-tbody > tr > td {
       color: ${FONT_COLOR_02};
       background: ${CAP_WHITE};
       padding: 0.5rem 0.75rem;
       cursor: pointer;
+      vertical-align: top;
     }
+  }
+
+  .details-main {
+    font-size: ${FONT_SIZE_M};
+    color: ${FONT_COLOR_01};
+  }
+
+  .details-context {
+    color: ${FONT_COLOR_02};
+  }
+
+  .details-message {
+    font-size: ${FONT_SIZE_S};
+    color: ${FONT_COLOR_02};
+    margin-top: 0.2rem;
+  }
+
+  .action-btn {
+    font-size: 1.125rem;
+    color: ${FONT_COLOR_02};
+    padding: 0 0.5rem;
   }
 `;

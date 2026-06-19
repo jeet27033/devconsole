@@ -123,31 +123,46 @@ const NewRelicIssues = ({ className, intl: { formatMessage } }) => {
     <CapRow className={`${className} newrelic-issues`}>
       <CapColumn span={24}>
         <div className="filters-section">
-          <CapInput
-            className="search-input"
-            value={searchQuery}
-            placeholder={formatMessage(messages.searchPlaceholder)}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <DateAndTimePicker onApply={handleDateApply} />
-          <CapSelect
-            className="filter-select"
-            options={STATUS_OPTIONS}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          />
-          <CapSelect
-            className="filter-select"
-            options={PRIORITY_OPTIONS}
-            value={priorityFilter}
-            onChange={setPriorityFilter}
-          />
-          <CapSelect
-            className="platform-select"
-            options={platforms}
-            value={platformFilter}
-            onChange={setPlatformFilter}
-          />
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.search)}</span>
+            <CapInput
+              className="search-input"
+              value={searchQuery}
+              placeholder={formatMessage(messages.searchPlaceholder)}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.dateTimeRange)}</span>
+            <DateAndTimePicker onApply={handleDateApply} />
+          </div>
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.status)}</span>
+            <CapSelect
+              className="filter-select"
+              options={STATUS_OPTIONS}
+              value={statusFilter}
+              onChange={setStatusFilter}
+            />
+          </div>
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.priority)}</span>
+            <CapSelect
+              className="filter-select"
+              options={PRIORITY_OPTIONS}
+              value={priorityFilter}
+              onChange={setPriorityFilter}
+            />
+          </div>
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.platform)}</span>
+            <CapSelect
+              className="platform-select"
+              options={platforms}
+              value={platformFilter}
+              onChange={setPlatformFilter}
+            />
+          </div>
         </div>
 
         {loading && <CapSpin />}

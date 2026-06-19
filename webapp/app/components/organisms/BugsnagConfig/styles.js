@@ -26,8 +26,21 @@ export default css`
   /* Toolbar */
   .toolbar-row {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
+    gap: ${CAP_SPACE_12};
     margin-bottom: ${CAP_SPACE_16};
+  }
+
+  .toolbar-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .toolbar-label {
+    font-size: ${FONT_SIZE_S};
+    font-weight: 500;
+    color: ${FONT_COLOR_02};
   }
 
   .app-select {

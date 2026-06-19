@@ -24,6 +24,11 @@ import {
   getMongoAuditLogById,
   approveMongoAuditLog,
   rejectMongoAuditLog,
+  getApplications,
+  getBugsnagIssues,
+  updateBugsnagErrorStatus,
+  getBugsnagConfig,
+  saveBugsnagConfig,
 } from '../services/extensions';
 import {
   buildLogsBodySchema,
@@ -130,6 +135,23 @@ export default (app: Router) => {
   );
 
   route.get(
+    '/get-applications',
+    //authenticateMiddleware(),
+    async (req: Request, res: Response) => {
+      try{
+        const orgId = req.headers['x-cap-api-auth-org-id'] as any;
+        const app = req.query.app as string;
+        const response = await getApplications(orgId, app);
+        return SuccessResponse(res, response, 200);
+      }
+      catch (e) {
+        logger.error('Error fetching applications', e);
+        return ErrorResponse(res, e);
+      }
+    }
+  )
+
+  route.get(
     '/get-fields',
     //authenticateMiddleware(),
     async (req: Request, res: Response) => {
@@ -185,6 +207,7 @@ export default (app: Router) => {
 
   route.get(
     '/get-dbs',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
         const orgId = req.headers['x-cap-api-auth-org-id'] as string;
@@ -199,6 +222,7 @@ export default (app: Router) => {
 
   route.get(
     '/get-collections',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
         const { db } = req.query as { db: string };
@@ -214,6 +238,7 @@ export default (app: Router) => {
 
   route.get(
     '/mongo-schema',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
         const { db, collection } = req.query as { db: string; collection: string };
@@ -229,6 +254,7 @@ export default (app: Router) => {
 
   route.post(
     '/mongo-query',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       const orgId = Number(req.headers['x-cap-api-auth-org-id']);
       const createdBy = (req.headers['x-cap-remote-user'] as string) || 'unknown';
@@ -267,6 +293,7 @@ export default (app: Router) => {
 
   route.get(
     '/mongo-audit-logs',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
         const orgId = Number(req.headers['x-cap-api-auth-org-id']);
@@ -286,6 +313,7 @@ export default (app: Router) => {
 
   route.get(
     '/mongo-audit-logs/:id',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
         const orgId = Number(req.headers['x-cap-api-auth-org-id']);
@@ -303,6 +331,7 @@ export default (app: Router) => {
 
   route.post(
     '/mongo-audit-logs/:id/approve',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
         const orgId = Number(req.headers['x-cap-api-auth-org-id']);
@@ -318,8 +347,75 @@ export default (app: Router) => {
     },
   );
 
+  route.get(
+    '/bugsnag/issues',
+    //authenticateMiddleware(),
+    async (req: Request, res: Response) => {
+      try {
+        const orgId = req.headers['x-cap-api-auth-org-id'] as string;
+        const { vulcan_app, from_date, to_date } = req.query as Record<string, string>;
+        const result = await getBugsnagIssues(orgId, vulcan_app, from_date, to_date);
+        return SuccessResponse(res, result, 200);
+      } catch (e) {
+        logger.error('Error fetching Bugsnag issues', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
+  route.get(
+    '/bugsnag/config',
+    async (req: Request, res: Response) => {
+      try {
+        const orgId = Number(req.headers['x-cap-api-auth-org-id']);
+        const { vulcan_app } = req.query as Record<string, string>;
+        if (!vulcan_app) return ErrorResponse(res, new Error('vulcan_app is required'));
+        const result = await getBugsnagConfig(orgId, vulcan_app);
+        return SuccessResponse(res, result, 200);
+      } catch (e) {
+        logger.error('Error fetching Bugsnag config', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
+  route.post(
+    '/bugsnag/config',
+    async (req: Request, res: Response) => {
+      try {
+        const orgId = Number(req.headers['x-cap-api-auth-org-id']);
+        const { vulcan_app, ...configData } = req.body;
+        if (!vulcan_app) return ErrorResponse(res, new Error('vulcan_app is required'));
+        const result = await saveBugsnagConfig(orgId, vulcan_app, configData);
+        return SuccessResponse(res, result, 200);
+      } catch (e) {
+        logger.error('Error saving Bugsnag config', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
+  route.post(
+    '/bugsnag/update-error-status',
+    //authenticateMiddleware(),
+    async (req: Request, res: Response) => {
+      try {
+        const { project_id, error_id, action } = req.body;
+        if (!project_id || !error_id || !action) {
+          return ErrorResponse(res, new Error('project_id, error_id and action are required'));
+        }
+        const result = await updateBugsnagErrorStatus(project_id, error_id, action);
+        return SuccessResponse(res, result, 200);
+      } catch (e) {
+        logger.error('Error updating Bugsnag error status', e);
+        return ErrorResponse(res, e);
+      }
+    },
+  );
+
   route.post(
     '/mongo-audit-logs/:id/reject',
+    //authenticateMiddleware(),
     async (req: Request, res: Response) => {
       try {
         const orgId = Number(req.headers['x-cap-api-auth-org-id']);

@@ -961,3 +961,138 @@ export const fetchLokiLogs = async (
     lastTimestamp: merged.at(-1)?.[0] ?? null,
   };
 };
+
+const BUGSNAG_API_BASE = 'https://api.bugsnag.com';
+
+const bugsnagHeaders = () => ({
+  Authorization: `token ${config.BUGSNAG_API_TOKEN}`,
+  'Content-Type': 'application/json',
+});
+
+export const getBugsnagProjects = async (): Promise<Array<{ id: string; name: string; slug: string }>> => {
+  if (!config.BUGSNAG_ORGANIZATION_ID) throw new Error('BUGSNAG_ORGANIZATION_ID is not configured');
+  const response = await callApi<Array<{ id: string; name: string; slug: string }>>({
+    url: `${BUGSNAG_API_BASE}/organizations/${config.BUGSNAG_ORGANIZATION_ID}/projects?per_page=100`,
+    headers: bugsnagHeaders(),
+  });
+  if (!response.success) throw new Error(`Bugsnag projects fetch failed: ${response.status}`);
+  return response.data ?? [];
+};
+
+export const getBugsnagIssues = async (_orgId: string, vulcanApp: string, fromDate?: string, toDate?: string) => {
+  const projects = await getBugsnagProjects();
+  let project = projects.find((p) =>
+    p.name?.toLowerCase() === vulcanApp?.toLowerCase() ||
+    p.slug?.toLowerCase() === vulcanApp?.toLowerCase()
+  );
+  if (!project && projects.length > 0) project = projects[0];
+  if (!project) return { issues: [], projectId: null };
+
+  const params = new URLSearchParams({ per_page: '50', sort: 'last_seen' });
+  if (fromDate) params.set('filters[since][][value]', fromDate);
+  if (toDate) params.set('filters[before][][value]', toDate);
+
+  const response = await callApi<Array<any>>({
+    url: `${BUGSNAG_API_BASE}/projects/${project.id}/errors?${params.toString()}`,
+    headers: bugsnagHeaders(),
+  });
+  if (!response.success) throw new Error(`Bugsnag issues fetch failed: ${response.status}`);
+
+  const issues = (response.data ?? []).map((e: any) => ({
+    id: e.id,
+    errorClass: e.error_class,
+    context: e.context,
+    message: e.message,
+    events: e.events,
+    users: e.users,
+    severity: e.severity,
+    status: e.status,
+    lastSeen: e.last_seen,
+    projectId: project!.id,
+  }));
+
+  return { issues, projectId: project.id };
+};
+
+export const updateBugsnagErrorStatus = async (projectId: string, errorId: string, action: 'open' | 'fixed' | 'ignored') => {
+  const statusMap: Record<string, string> = { open: 'open', fixed: 'fixed', ignored: 'ignored' };
+  const response = await callApi({
+    url: `${BUGSNAG_API_BASE}/projects/${projectId}/errors/${errorId}`,
+    method: 'PATCH',
+    headers: bugsnagHeaders(),
+    body: { status: statusMap[action] || action },
+  });
+  if (!response.success) throw new Error(`Bugsnag update error status failed: ${response.status}`);
+  return response.data;
+};
+
+export const getBugsnagConfig = async (orgId: number, vulcanApp: string) => {
+  const pool = getMySQLPool();
+  const [rows]: any = await pool.query(
+    'SELECT config_json FROM bugsnag_config WHERE org_id = ? AND vulcan_app = ? ORDER BY updated_at DESC LIMIT 1',
+    [orgId, vulcanApp],
+  );
+  if (!rows?.[0]) return null;
+  try {
+    return JSON.parse(rows[0].config_json);
+  } catch {
+    return null;
+  }
+};
+
+export const saveBugsnagConfig = async (orgId: number, vulcanApp: string, configData: Record<string, any>) => {
+  const pool = getMySQLPool();
+  await pool.query(
+    `INSERT INTO bugsnag_config (org_id, vulcan_app, config_json)
+     VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE config_json = VALUES(config_json), updated_at = NOW()`,
+    [orgId, vulcanApp, JSON.stringify(configData)],
+  );
+
+  // Sync stability targets to Bugsnag API
+  const projects = await getBugsnagProjects().catch(() => []);
+  const project = projects.find(
+    (p) => p.name?.toLowerCase() === vulcanApp?.toLowerCase() || p.slug?.toLowerCase() === vulcanApp?.toLowerCase(),
+  );
+  if (project && (configData.target_stability != null || configData.critical_stability != null)) {
+    await callApi({
+      url: `${BUGSNAG_API_BASE}/projects/${project.id}`,
+      method: 'PATCH',
+      headers: bugsnagHeaders(),
+      body: {
+        ...(configData.target_stability != null && { stability_threshold: configData.target_stability }),
+        ...(configData.critical_stability != null && { stability_threshold_critical: configData.critical_stability }),
+      },
+    });
+  }
+
+  return { success: true };
+};
+
+export const getApplications = async (orgId: number, appName: string) => {
+  logger.info(`getApplications: org ${orgId}, appName ${appName}`);
+  const apps = [];
+  if (appName.toLowerCase() === 'vulcan') {
+    try {
+      const url = `${config.VULCAN_SERVICE_HOST}/vulcan/api/v1/metadata/list?limit=1000&offset=0`;
+      const response = await callApi<{ result: { applications: Array<{ name: string; orgId: number; accessibleOrgs: number[] }> } }>({
+        url,
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${config.INTOUCH_AUTH_TOKEN}`,
+          'x-cap-api-auth-org-id': String(orgId),
+          'User-Agent': DEVCONSOLE_USER_AGENT,
+        },
+      });
+      const applications = response.data?.result?.applications ?? [];
+      for (const app of applications) {
+        if (app.orgId === Number(orgId) || (Array.isArray(app.accessibleOrgs) && app.accessibleOrgs.includes(Number(orgId)))) {
+          apps.push({ type: 'vulcan', display: `Vulcan - ${app.name}`, name: app.name });
+        }
+      }
+    } catch (e) {
+      logger.error(`getApplications: failed to fetch vulcan apps for org ${orgId}`, e);
+    }
+  }
+  return apps;
+}

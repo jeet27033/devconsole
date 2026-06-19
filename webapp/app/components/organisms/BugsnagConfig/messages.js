@@ -139,4 +139,8 @@ export default defineMessages({
     id: `${scope}.save`,
     defaultMessage: 'Save',
   },
+  application: {
+    id: `${scope}.application`,
+    defaultMessage: 'Application',
+  },
 });

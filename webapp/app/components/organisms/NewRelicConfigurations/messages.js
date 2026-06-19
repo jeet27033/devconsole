@@ -111,4 +111,20 @@ export default defineMessages({
     id: `${scope}.save`,
     defaultMessage: 'Save',
   },
+  search: {
+    id: `${scope}.search`,
+    defaultMessage: 'Search',
+  },
+  platform: {
+    id: `${scope}.platform`,
+    defaultMessage: 'Platform',
+  },
+  signal: {
+    id: `${scope}.signal`,
+    defaultMessage: 'Signal',
+  },
+  status: {
+    id: `${scope}.status`,
+    defaultMessage: 'Status',
+  },
 });

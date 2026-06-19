@@ -180,3 +180,28 @@ export const saveConfigRequest = async (body) => {
   const url = `${endpoints.devconsole_endpoint}/config/save`;
   return httpRequest(url, getVulcanAPICallObject('POST', body));
 };
+
+export const getApplications = async ({ app }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/get-applications?app=${encodeURIComponent(app)}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const getBugsnagIssues = async (query = '') => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/bugsnag/issues${query}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const updateBugsnagErrorStatus = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/bugsnag/update-error-status`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};
+
+export const getBugsnagConfig = async ({ vulcanApp }) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/bugsnag/config?vulcan_app=${encodeURIComponent(vulcanApp)}`;
+  return httpRequest(url, getVulcanAPICallObject('GET'));
+};
+
+export const saveBugsnagConfig = async (body) => {
+  const url = `${endpoints.devconsole_endpoint}/extensions/bugsnag/config`;
+  return httpRequest(url, getVulcanAPICallObject('POST', body));
+};

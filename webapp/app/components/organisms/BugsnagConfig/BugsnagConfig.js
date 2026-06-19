@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { injectIntl } from 'react-intl';
 import { withStyles } from '@capillarytech/vulcan-react-sdk/utils';
 import {
@@ -15,7 +15,6 @@ import CapStepsAccordian from '@capillarytech/cap-ui-library/CapStepsAccordian';
 import styles from './styles';
 import messages from './messages';
 import {
-  VULCAN_APPS,
   COMMUNICATION_CHANNELS,
   SEVERITY_OPTIONS,
   TYPE_OPTIONS,
@@ -23,6 +22,7 @@ import {
   PERIOD_UNITS,
   DEFAULT_CONFIG,
 } from './constants';
+import { getApplications, getBugsnagConfig, saveBugsnagConfig } from '../../../services/api';
 
 const { TextArea } = CapInput;
 
@@ -159,9 +159,33 @@ const FilterSection = ({
 };
 
 const BugsnagConfig = ({ className, intl: { formatMessage } }) => {
-  const [selectedApp, setSelectedApp] = useState('all');
+  const [apps, setApps] = useState([]);
+  const [selectedApp, setSelectedApp] = useState(null);
   const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [saving, setSaving] = useState(false);
   const [activeAccordionKey, setActiveAccordionKey] = useState(null);
+
+  useEffect(() => {
+    getApplications({ app: 'vulcan' })
+      .then((data) => {
+        const list = (data?.data || []).map((a) => ({
+          value: a.name,
+          label: a.display,
+        }));
+        setApps(list);
+        if (list.length > 0) setSelectedApp(list[0].value);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedApp) return;
+    getBugsnagConfig({ vulcanApp: selectedApp })
+      .then((data) => {
+        if (data?.data) setConfig({ ...DEFAULT_CONFIG, ...data.data });
+      })
+      .catch(() => {});
+  }, [selectedApp]);
 
   const handleAppChange = useCallback((value) => {
     setSelectedApp(value);
@@ -183,8 +207,11 @@ const BugsnagConfig = ({ className, intl: { formatMessage } }) => {
   }, []);
 
   const handleSave = useCallback(() => {
-    // Save config
-  }, [config]);
+    if (!selectedApp) return;
+    setSaving(true);
+    saveBugsnagConfig({ vulcan_app: selectedApp, ...config })
+      .finally(() => setSaving(false));
+  }, [selectedApp, config]);
 
   const isFormValid =
     config.notification.channel &&
@@ -297,7 +324,7 @@ const BugsnagConfig = ({ className, intl: { formatMessage } }) => {
       content: (
         <CapSelect
           mode="multiple"
-          options={VULCAN_APPS.filter((a) => a.value !== 'all')}
+          options={apps}
           value={config.newRelease?.apps || []}
           onChange={(value) =>
             handleConfigChange('newRelease', { apps: value })
@@ -313,13 +340,16 @@ const BugsnagConfig = ({ className, intl: { formatMessage } }) => {
     <CapRow className={`${className} bugsnag-config`}>
       <CapColumn span={24}>
         <div className="toolbar-row">
-          <CapSelect
-            className="app-select"
-            options={VULCAN_APPS}
-            value={selectedApp}
-            onChange={handleAppChange}
-            style={{ width: '14rem' }}
-          />
+          <div className="toolbar-field">
+            <span className="toolbar-label">{formatMessage(messages.application)}</span>
+            <CapSelect
+              className="app-select"
+              options={apps}
+              value={selectedApp}
+              onChange={handleAppChange}
+              style={{ width: '14rem' }}
+            />
+          </div>
         </div>
 
         <div className="config-card">
@@ -455,7 +485,7 @@ const BugsnagConfig = ({ className, intl: { formatMessage } }) => {
               className="config-accordion"
               items={accordionItems}
               showNumberSteps={false}
-              isChevronIcon
+              expandIconPosition="right"
               activeKey={activeAccordionKey}
               onChange={handleAccordionChange}
             />
@@ -464,7 +494,8 @@ const BugsnagConfig = ({ className, intl: { formatMessage } }) => {
               className="save-button"
               type="primary"
               onClick={handleSave}
-              disabled={!isFormValid}
+              disabled={!isFormValid || saving}
+              loading={saving}
             >
               {formatMessage(messages.save)}
             </CapButton>

@@ -27,4 +27,36 @@ export default defineMessages({
     id: `${scope}.appPlaceholder`,
     defaultMessage: 'All Products',
   },
+  dateTimeRange: {
+    id: `${scope}.dateTimeRange`,
+    defaultMessage: 'Date / Time Range',
+  },
+  application: {
+    id: `${scope}.application`,
+    defaultMessage: 'Application',
+  },
+  columnActions: {
+    id: `${scope}.columnActions`,
+    defaultMessage: '',
+  },
+  noErrors: {
+    id: `${scope}.noErrors`,
+    defaultMessage: 'No errors found',
+  },
+  actionOpen: {
+    id: `${scope}.actionOpen`,
+    defaultMessage: 'Open',
+  },
+  actionFixed: {
+    id: `${scope}.actionFixed`,
+    defaultMessage: 'Fixed',
+  },
+  actionIgnored: {
+    id: `${scope}.actionIgnored`,
+    defaultMessage: 'Ignored',
+  },
+  noVulcanApps: {
+    id: `${scope}.noVulcanApps`,
+    defaultMessage: 'No Vulcan apps available for this organization',
+  },
 });

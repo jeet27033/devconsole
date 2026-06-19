@@ -180,30 +180,42 @@ const NewRelicConfigurations = ({ className, intl: { formatMessage } }) => {
     <CapRow className={`${className} newrelic-configurations`}>
       <CapColumn span={24}>
         <div className="filters-section">
-          <CapInput
-            className="search-input"
-            value={searchQuery}
-            placeholder={formatMessage(messages.searchPlaceholder)}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <CapSelect
-            className="platform-select"
-            options={platforms}
-            value={platformFilter}
-            onChange={setPlatformFilter}
-          />
-          <CapSelect
-            className="filter-select"
-            options={signals}
-            value={signalFilter}
-            onChange={setSignalFilter}
-          />
-          <CapSelect
-            className="filter-select"
-            options={STATUS_OPTIONS}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          />
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.search)}</span>
+            <CapInput
+              className="search-input"
+              value={searchQuery}
+              placeholder={formatMessage(messages.searchPlaceholder)}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.platform)}</span>
+            <CapSelect
+              className="platform-select"
+              options={platforms}
+              value={platformFilter}
+              onChange={setPlatformFilter}
+            />
+          </div>
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.signal)}</span>
+            <CapSelect
+              className="filter-select"
+              options={signals}
+              value={signalFilter}
+              onChange={setSignalFilter}
+            />
+          </div>
+          <div className="filter-field">
+            <span className="filter-label">{formatMessage(messages.status)}</span>
+            <CapSelect
+              className="filter-select"
+              options={STATUS_OPTIONS}
+              value={statusFilter}
+              onChange={setStatusFilter}
+            />
+          </div>
           <div className="filters-right">
             <button
               className="settings-btn"

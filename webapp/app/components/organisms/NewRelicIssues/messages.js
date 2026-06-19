@@ -47,4 +47,24 @@ export default defineMessages({
     id: `${scope}.acknowledgedBy`,
     defaultMessage: 'Acknowledged by {user}',
   },
+  search: {
+    id: `${scope}.search`,
+    defaultMessage: 'Search',
+  },
+  dateTimeRange: {
+    id: `${scope}.dateTimeRange`,
+    defaultMessage: 'Date / Time Range',
+  },
+  status: {
+    id: `${scope}.status`,
+    defaultMessage: 'Status',
+  },
+  priority: {
+    id: `${scope}.priority`,
+    defaultMessage: 'Priority',
+  },
+  platform: {
+    id: `${scope}.platform`,
+    defaultMessage: 'Platform',
+  },
 });
