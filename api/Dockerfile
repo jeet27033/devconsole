@@ -1,4 +1,4 @@
-FROM 486456986266.dkr.ecr.us-west-1.amazonaws.com/crm/arya-node-api-service:ab9cc2e-1882
+FROM 486456986266.dkr.ecr.us-west-1.amazonaws.com/ops/cve-fixed-nodejs-twentyfour-baseimage:19b7fb1-1
 ENV BASE_DIR=/opt/capillary/cosmic/api/
 RUN mkdir -p $BASE_DIR
 RUN mkdir -p /mnt/downloads
